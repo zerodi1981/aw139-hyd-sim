@@ -28,6 +28,19 @@ Non sostituisce l'addestramento certificato e **non deve essere usato** per manu
 
 AW139 è un marchio dei rispettivi proprietari ed è citato a solo scopo descrittivo.
 
+## Licenza
+
+© 2026 Scarascia Simone – distribuito con licenza [Creative Commons BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it).
+
+[![CC BY-NC-ND 4.0](https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png)](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it)
+
+- ✅ Puoi usarlo e condividerlo liberamente, così com'è, citando l'autore.
+- ❌ Non puoi venderlo né usarlo a fini commerciali.
+- ❌ Non puoi distribuirne versioni modificate.
+- ❌ Non puoi rimuovere o cambiare il nome dell'autore.
+
+Testo completo nel file [LICENSE](LICENSE).
+
 ---
 
-Simulatore creato da **Scarascia Simone**
+Simulatore creato da **Scarascia Simone** · ☕ [Offrimi un caffè, se vuoi](https://www.paypal.me/scarasciasimone)
