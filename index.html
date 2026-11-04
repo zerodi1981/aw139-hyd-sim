@@ -172,10 +172,48 @@ footer b{color:var(--txt)}
 .toast.out{opacity:0;transform:translateY(8px)}
 @keyframes tin{from{opacity:0;transform:translateY(10px)}}
 .eptim{font-family:'B612 Mono',monospace;font-size:11px;color:var(--green);text-align:center;height:14px;margin-top:3px}
+.dbtn{background:linear-gradient(180deg,#ffcc4d,#f5a300);border:none;color:#2a1a00;font-weight:700;font-size:14.5px;padding:9px 16px;border-radius:999px;box-shadow:0 0 0 0 rgba(255,190,40,.6);animation:dpulse 2.4s ease-out infinite}
+.dbtn:hover{filter:brightness(1.08);background:linear-gradient(180deg,#ffd666,#ffb000)}
+@keyframes dpulse{0%{box-shadow:0 0 0 0 rgba(255,190,40,.55)}70%{box-shadow:0 0 0 12px rgba(255,190,40,0)}100%{box-shadow:0 0 0 0 rgba(255,190,40,0)}}
+.coffee{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#3a2a10,#2a1f10);border:1px solid #7a5a1a;border-radius:10px;padding:14px;margin-bottom:14px;cursor:pointer}
+.coffee .cup{font-size:34px;line-height:1}
+.coffee b{color:#ffd27a;font-size:15px}
+.coffee span{color:#d9c7a3;font-size:12.5px;display:block;margin-top:2px}
+.coffee button{margin-left:auto;flex:none}
+#don{position:fixed;inset:0;z-index:45;background:rgba(5,7,10,.75);display:flex;align-items:center;justify-content:center;padding:16px}
+#don.hide{display:none}
+.donbox{width:min(460px,100%);background:#fff;color:#1b1f24;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.donhd{background:#1f8f4a;color:#fff;padding:18px 20px;display:flex;justify-content:space-between;align-items:center}
+.donhd h2{margin:0;font-size:21px}
+.donhd button{background:none;border:none;color:#fff;font-size:26px;line-height:1;padding:0 4px;cursor:pointer}
+.donbd{padding:18px 20px 20px}
+.donbd p{margin:0 0 14px;line-height:1.5;font-size:14.5px}
+.amts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.amts button{background:#f3f4f6;color:#1b1f24;border:1px solid #d0d5db;font-size:16px;padding:10px 0;border-radius:8px}
+.amts button.sel{background:#1f8f4a;color:#fff;border-color:#1f8f4a}
+#donCustom{width:100%;padding:10px 12px;border:1px solid #d0d5db;border-radius:8px;font-size:15px;margin-bottom:14px;color:#1b1f24;background:#fff}
+.payb{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:8px;color:#fff;font-weight:700;font-size:15.5px;text-decoration:none;margin-bottom:9px}
+.payb.pp{background:#003087}.payb.rv{background:#111}.payb.kf{background:#ff5f00}
+.payb:hover{filter:brightness(1.12)}
+.donnote{font-size:11.5px;color:#6b7280;text-align:center;margin-top:4px}
 </style>
 </head>
 <body>
 <div class="toasts" id="toasts"></div>
+<div id="don" class="hide" role="dialog" aria-modal="true" aria-labelledby="donT">
+  <div class="donbox">
+    <div class="donhd"><h2 id="donT">☕ Offrimi un caffè, se vuoi</h2><button id="donX" aria-label="Chiudi">×</button></div>
+    <div class="donbd">
+      <p>Questo simulatore è gratuito e senza pubblicità. Se ti è stato utile per lo studio e ti va, offrimi un caffè: mi aiuta a continuare a migliorarlo.</p>
+      <div class="amts"><button data-a="1">☕ 1 €</button><button data-a="3" class="sel">☕☕ 3 €</button><button data-a="5">☕☕☕ 5 €</button></div>
+      <input id="donCustom" type="number" min="1" step="1" inputmode="decimal" placeholder="Oppure inserisci un importo (€)">
+      <a class="payb pp" id="donPP" href="#" target="_blank" rel="noopener">PayPal</a>
+      <a class="payb rv" id="donRV" href="#" target="_blank" rel="noopener">Revolut</a>
+      <a class="payb kf" id="donKF" href="#" target="_blank" rel="noopener">♥ Ko-fi</a>
+      <div class="donnote">Il pagamento avviene sul sito del servizio scelto. Grazie! — Scarascia Simone</div>
+    </div>
+  </div>
+</div>
 <div id="disc" role="dialog" aria-modal="true" aria-labelledby="discT">
   <div class="dbox" id="discMain">
     <h2 id="discT">⚠ Avviso importante</h2>
@@ -189,7 +227,7 @@ footer b{color:var(--txt)}
     </ul>
     <p>Proseguendo dichiari di aver letto e compreso queste limitazioni.</p>
     <div class="acts"><button id="discNo">Non accetto</button><button class="acc" id="discYes">Accetto e proseguo</button></div>
-    <div class="sign">Simulatore creato da <b>Scarascia Simone</b></div>
+    <div class="sign">Simulatore creato da <b>Scarascia Simone</b> · ☕ se ti è utile, puoi offrirmi un caffè</div>
   </div>
   <div class="dbox" id="discDenied" style="display:none;border-top-color:var(--red)">
     <h2>Accesso non consentito</h2>
@@ -208,6 +246,7 @@ footer b{color:var(--txt)}
       <button data-s="0">❚❚</button><button data-s="1" class="on">1×</button><button data-s="5">5×</button><button data-s="20">20×</button>
     </span>
     <span id="clock">00:00</span>
+    <button class="dbtn" id="donOpen">☕ Offrimi un caffè, se vuoi</button>
   </div>
 </header>
 
@@ -293,6 +332,7 @@ footer b{color:var(--txt)}
   </section>
 
   <aside>
+    <div class="coffee" id="donCard"><div class="cup">☕</div><div><b>Offrimi un caffè, se vuoi</b><span>Il simulatore è gratuito e senza pubblicità. Se ti è utile, puoi sostenerlo con un piccolo contributo.</span></div><button class="dbtn" style="animation:none">Offri</button></div>
     <div class="card">
       <h3>Stato aeromobile</h3>
       <div class="row"><label>Batteria / DC bus</label><button id="bBat">OFF</button></div>
@@ -351,7 +391,7 @@ footer b{color:var(--txt)}
     </div>
   </aside>
 </main>
-<footer>Simulatore didattico non ufficiale · basato sulla pubblicazione di addestramento ATA 29 – Hydraulic Power · Simulatore creato da <b>Scarascia Simone</b></footer>
+<footer>Simulatore didattico non ufficiale · basato sulla pubblicazione di addestramento ATA 29 – Hydraulic Power · Simulatore creato da <b>Scarascia Simone</b> · <a href="#" id="donFoot" style="color:#ffcc4d;font-weight:700">☕ Offrimi un caffè, se vuoi</a></footer>
 
 <script>
 (()=>{
@@ -877,6 +917,26 @@ document.getElementById('mc').onclick=()=>ackCat('c');
 document.getElementById('mw').onclick=()=>ackCat('w');
 document.getElementById('aud').onclick=e=>{audioOn=!audioOn; if(audioOn&&!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(x){}}
   if(actx&&actx.state==='suspended')actx.resume(); e.target.textContent=audioOn?'🔊 Audio ON':'🔇 Audio OFF'; e.target.className=audioOn?'on':''; if(audioOn)chime('c');};
+// ---------- donations (fill in your usernames) ----------
+const DONATE={paypal:'scarasciasimone',revolut:'',kofi:''}; // es. paypal:'zerodi1981' → paypal.me/zerodi1981
+let donAmt=3;
+function donLinks(){
+  const pp=document.getElementById('donPP'),rv=document.getElementById('donRV'),kf=document.getElementById('donKF');
+  const set=(a,url,show)=>{a.style.display=show?'':'none'; if(show) a.href=url;};
+  set(pp,`https://www.paypal.me/${DONATE.paypal}/${donAmt}EUR`,!!DONATE.paypal);
+  set(rv,`https://revolut.me/${DONATE.revolut}`,!!DONATE.revolut);
+  set(kf,`https://ko-fi.com/${DONATE.kofi}`,!!DONATE.kofi);
+  pp.textContent=`PayPal · ${donAmt} €`;
+}
+const donEl=document.getElementById('don');
+const donOpen=e=>{if(e)e.preventDefault();donLinks();donEl.classList.remove('hide');};
+document.getElementById('donOpen').onclick=donOpen; document.getElementById('donCard').onclick=donOpen; document.getElementById('donFoot').onclick=donOpen;
+document.getElementById('donX').onclick=()=>donEl.classList.add('hide');
+donEl.addEventListener('click',e=>{if(e.target===donEl)donEl.classList.add('hide');});
+document.querySelectorAll('.amts button').forEach(b=>b.onclick=()=>{donAmt=+b.dataset.a;document.getElementById('donCustom').value='';
+  document.querySelectorAll('.amts button').forEach(x=>x.classList.toggle('sel',x===b));donLinks();});
+document.getElementById('donCustom').oninput=e=>{const v=Math.round(parseFloat(e.target.value)*100)/100;
+  if(v>0){donAmt=v;document.querySelectorAll('.amts button').forEach(x=>x.classList.remove('sel'));}donLinks();};
 const disc=document.getElementById('disc');
 document.getElementById('discYes').onclick=()=>{disc.classList.add('hide');speed=1;document.querySelectorAll('#spd button').forEach(x=>x.classList.toggle('on',x.dataset.s==='1'));};
 document.getElementById('discNo').onclick=()=>{document.getElementById('discMain').style.display='none';document.getElementById('discDenied').style.display='';};
