@@ -1,6 +1,6 @@
-# Simulatore impianto idraulico AW139 – ATA 29
+# Simulatore impianto idraulico ispirato all'AW139 – ATA 29
 
-Simulatore didattico **non ufficiale** dell'impianto idraulico dell'elicottero AW139 (ATA 29 – Hydraulic Power), pensato per lo studio e il ripasso.
+Simulatore **amatoriale e non ufficiale** che si ispira all'impianto idraulico di un elicottero bimotore della classe AW139 (ATA 29 – Hydraulic Power). È una ricostruzione semplificata e non verificata, **da considerare un gioco**.
 
 **▶ Apri il simulatore:** https://zerodi1981.github.io/aw139-hyd-sim/
 
@@ -13,7 +13,7 @@ Simulatore didattico **non ufficiale** dell'impianto idraulico dell'elicottero A
 - **Logiche dei microswitch di livello** dei PCM (50% / 28% / 22%) e isolamento automatico di utility e rotore di coda.
 - **Avarie**: pompe (usura con case drain, rottura shear shaft, compensatore bloccato), perdite in diversi punti, surriscaldamento (isolabile, non isolabile, falso allarme), intasamento progressivo dei filtri con by-pass sul ritorno, servo in by-pass, shuttle valve bloccata.
 - **Manutenzione**: indicatori meccanici a scatto con reset, livello visivo FULL/ADD, rabbocco, banco idraulico a terra.
-- **Scenari pronti** che riproducono i casi di funzionamento e avaria descritti nella pubblicazione di addestramento.
+- **Scenari pronti** di funzionamento normale e di avaria.
 
 ## Come si usa
 
@@ -21,10 +21,11 @@ Apri il link qui sopra, oppure scarica `index.html` e aprilo con un doppio clic 
 
 ## Avviso
 
-Questo progetto **non è prodotto, approvato né validato** da Leonardo Helicopters o da alcuna autorità aeronautica.
-Le logiche riproducono quanto descritto nella pubblicazione di addestramento ATA 29; alcuni valori non presenti nel manuale sono stimati e indicati come tali nella pagina.
+Questo simulatore è una **ricostruzione amatoriale e semplificata**, frutto dell'interpretazione personale dell'autore. Logiche e valori **non sono stati verificati** e possono essere incompleti o diversi dalla realtà; molti valori sono stimati.
 
-Non sostituisce l'addestramento certificato e **non deve essere usato** per manutenzione, ricerca guasti, decisioni operative o qualsiasi scopo ufficiale. Per ogni attività ufficiale fare riferimento esclusivamente alla documentazione approvata e in vigore (AMM / IETP, RFM, procedure aziendali).
+- **Va considerato un gioco**: non è uno strumento di addestramento e non bisogna allenarsi o studiare su questo simulatore.
+- Non è prodotto, verificato né approvato da Leonardo Helicopters, da autorità aeronautiche o da alcun altro ente.
+- Non può essere usato per addestramento, manutenzione, ricerca guasti, decisioni operative o qualsiasi scopo ufficiale: per questo vale esclusivamente la documentazione ufficiale approvata e l'addestramento certificato.
 
 AW139 è un marchio dei rispettivi proprietari ed è citato a solo scopo descrittivo.
 
@@ -43,4 +44,4 @@ Testo completo nel file [LICENSE](LICENSE).
 
 ---
 
-Simulatore creato da **Scarascia Simone** · ☕ [Offrimi un caffè, se vuoi](https://www.paypal.me/scarasciasimone)
+Simulatore creato da **Scarascia Simone**

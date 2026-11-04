@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  Simulatore impianto idraulico AW139 – ATA 29 (simulatore didattico non ufficiale)
+  Simulatore impianto idraulico ispirato all'AW139 – ATA 29 (simulatore amatoriale non ufficiale, da considerare un gioco)
   © 2026 Scarascia Simone – https://github.com/zerodi1981/aw139-hyd-sim
 
   Quest'opera è distribuita con licenza Creative Commons
@@ -212,34 +212,21 @@ footer b{color:var(--txt)}
 </head>
 <body>
 <div class="toasts" id="toasts"></div>
-<div id="don" class="hide" role="dialog" aria-modal="true" aria-labelledby="donT">
-  <div class="donbox">
-    <div class="donhd"><h2 id="donT">☕ Offrimi un caffè, se vuoi</h2><button id="donX" aria-label="Chiudi">×</button></div>
-    <div class="donbd">
-      <p>Questo simulatore è gratuito e senza pubblicità. Se ti è stato utile per lo studio e ti va, offrimi un caffè: mi aiuta a continuare a migliorarlo.</p>
-      <div class="amts"><button data-a="1">☕ 1 €</button><button data-a="3" class="sel">☕☕ 3 €</button><button data-a="5">☕☕☕ 5 €</button></div>
-      <input id="donCustom" type="number" min="1" step="1" inputmode="decimal" placeholder="Oppure inserisci un importo (€)">
-      <a class="payb pp" id="donPP" href="#" target="_blank" rel="noopener">PayPal</a>
-      <a class="payb rv" id="donRV" href="#" target="_blank" rel="noopener">Revolut</a>
-      <a class="payb kf" id="donKF" href="#" target="_blank" rel="noopener">♥ Ko-fi</a>
-      <div class="donnote">Il pagamento avviene sul sito del servizio scelto. Grazie! — Scarascia Simone</div>
-    </div>
-  </div>
-</div>
 <div id="disc" role="dialog" aria-modal="true" aria-labelledby="discT">
   <div class="dbox" id="discMain">
     <h2 id="discT">⚠ Avviso importante</h2>
-    <div class="sub">Simulatore didattico non ufficiale</div>
-    <p>Questo è un simulatore <b>non ufficiale</b> dell'impianto idraulico dell'elicottero AW139 (ATA 29 – Hydraulic Power), realizzato a solo scopo di studio e ripasso personale.</p>
-    <p>Le logiche di funzionamento, le soglie e le indicazioni riproducono quanto descritto nella pubblicazione di addestramento ATA 29. Alcuni valori non riportati nel manuale sono stimati e sono indicati come tali all'interno della pagina.</p>
+    <div class="sub">Simulatore amatoriale non ufficiale – da considerare un gioco</div>
+    <p>Questo è un simulatore <b>amatoriale e non ufficiale</b> che <b>si ispira</b> all'impianto idraulico di un elicottero bimotore della classe AW139. È una ricostruzione semplificata, realizzata per passione e a scopo di curiosità e intrattenimento.</p>
+    <p>Logiche, valori e indicazioni sono un'interpretazione personale dell'autore, <b>non sono stati verificati</b> e possono essere incompleti o diversi dalla realtà. Molti valori sono stimati.</p>
     <ul>
-      <li>Non è prodotto, approvato né validato da Leonardo Helicopters o da alcuna autorità aeronautica.</li>
-      <li>Non sostituisce l'addestramento certificato e non può essere usato per attività di manutenzione, ricerca guasti, decisioni operative o qualsiasi scopo ufficiale.</li>
-      <li>Per ogni attività ufficiale fare riferimento esclusivamente alla documentazione approvata e in vigore (AMM / IETP, RFM, procedure aziendali).</li>
+      <li><b>Va considerato un gioco</b>: non è uno strumento di addestramento e <b>non bisogna allenarsi o studiare su questo simulatore</b>.</li>
+      <li>Non è prodotto, verificato né approvato da Leonardo Helicopters, da autorità aeronautiche (EASA, ENAC…) o da alcun altro ente o organizzazione.</li>
+      <li>Non può essere usato per addestramento, manutenzione, ricerca guasti, decisioni operative o qualsiasi scopo ufficiale. Per tutto questo vale esclusivamente la documentazione ufficiale approvata e in vigore e l'addestramento certificato.</li>
+      <li>AW139 è un marchio dei rispettivi proprietari ed è citato a solo scopo descrittivo.</li>
     </ul>
-    <p>Proseguendo dichiari di aver letto e compreso queste limitazioni.</p>
+    <p>Proseguendo dichiari di aver letto e compreso queste limitazioni e di usare il simulatore solo come gioco.</p>
     <div class="acts"><button id="discNo">Non accetto</button><button class="acc" id="discYes">Accetto e proseguo</button></div>
-    <div class="sign">© 2026 Simulatore creato da <b>Scarascia Simone</b> · Licenza <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it" target="_blank" rel="noopener license" style="color:var(--cyan)">CC BY-NC-ND 4.0</a><br>Puoi condividerlo liberamente, senza modifiche e senza fini commerciali, citando l'autore.<br>☕ Se ti è utile, puoi offrirmi un caffè</div>
+    <div class="sign">© 2026 Simulatore creato da <b>Scarascia Simone</b> · Licenza <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it" target="_blank" rel="noopener license" style="color:var(--cyan)">CC BY-NC-ND 4.0</a><br>Puoi condividerlo liberamente, senza modifiche e senza fini commerciali, citando l'autore.</div>
   </div>
   <div class="dbox" id="discDenied" style="display:none;border-top-color:var(--red)">
     <h2>Accesso non consentito</h2>
@@ -250,7 +237,7 @@ footer b{color:var(--txt)}
   </div>
 </div>
 <header>
-  <h1>AW139 · Impianto idraulico <small>ATA 29 – Hydraulic Power · simulatore didattico</small></h1>
+  <h1>AW139 · Impianto idraulico <small>ATA 29 – Hydraulic Power · simulatore amatoriale non ufficiale</small></h1>
   <div class="hctl">
     <select id="scn"></select>
     <button id="scnGo">Carica scenario</button>
@@ -258,7 +245,6 @@ footer b{color:var(--txt)}
       <button data-s="0">❚❚</button><button data-s="1" class="on">1×</button><button data-s="5">5×</button><button data-s="20">20×</button>
     </span>
     <span id="clock">00:00</span>
-    <button class="dbtn" id="donOpen">☕ Offrimi un caffè, se vuoi</button>
   </div>
 </header>
 
@@ -344,7 +330,6 @@ footer b{color:var(--txt)}
   </section>
 
   <aside>
-    <div class="coffee" id="donCard"><div class="cup">☕</div><div><b>Offrimi un caffè, se vuoi</b><span>Il simulatore è gratuito e senza pubblicità. Se ti è utile, puoi sostenerlo con un piccolo contributo.</span></div><button class="dbtn" style="animation:none">Offri</button></div>
     <div class="card">
       <h3>Stato aeromobile</h3>
       <div class="row"><label>Batteria / DC bus</label><button id="bBat">OFF</button></div>
@@ -389,26 +374,26 @@ footer b{color:var(--txt)}
     </div>
 
     <div class="card">
-      <h3>Logiche implementate</h3>
+      <h3>Logiche implementate (interpretazione dell'autore, non verificata)</h3>
       <div class="note">
         <b>Pressioni:</b> nominale 207 bar; PRESS / HYD OIL PRESS / HYD PUMP ON &lt; 163 bar, OFF &gt; 190 bar. ELEC PUMP 105 bar a portata nulla, 90 bar a portata massima, timer 2 min, inibita in volo.<br>
-        <b>Temperatura:</b> TEMP / HYD OIL TEMP ON &gt; 134 °C, OFF &lt; 127 °C (pag. 853; il pannello a pag. 801 indica 135 °C). Nessuna azione automatica: l'equipaggio conferma sul sinottico e isola con la SOV; le linee servo vanno in scarico, la pressione a monte e le utility restano.<br>
+        <b>Temperatura:</b> TEMP / HYD OIL TEMP ON &gt; 134 °C, OFF &lt; 127 °C. Nessuna azione automatica: l'equipaggio conferma sul sinottico e isola con la SOV; le linee servo vanno in scarico, la pressione a monte e le utility restano.<br>
 <b>Filtri:</b> solo il filtro di ritorno ha la valvola di by-pass; il filtro di pressione no. Indicatori meccanici a scatto con reset manuale + interruttore Δp → messaggio di manutenzione n HYD FILTER e filtro ambra sul sinottico.<br>
 <b>Banco a terra (GE):</b> la shuttle valve manda il ritorno al serbatoio del banco, bypassando il PCM; se resta bloccata, la return by-pass valve scarica nel serbatoio PCM.<br>
-        <b>Livello:</b> 22% = 0,7 l (pag. 853). <b>PCM 2:</b> &lt;50% chiude UTIL SOV2 · &lt;28% chiude TRSOV e riapre UTIL SOV2 · &lt;22% richiude UTIL SOV2 (TRSOV resta chiusa). <b>PCM 1:</b> &lt;22% chiude UTIL SOV1; 50% e 28% solo indicazione ambra.<br>
+        <b>Livello:</b> 22% ≈ 0,7 l. <b>PCM 2:</b> &lt;50% chiude UTIL SOV2 · &lt;28% chiude TRSOV e riapre UTIL SOV2 · &lt;22% richiude UTIL SOV2 (TRSOV resta chiusa). <b>PCM 1:</b> &lt;22% chiude UTIL SOV1; 50% e 28% solo indicazione ambra.<br>
         <b>Interlock SOV:</b> 1 CLOSE inibito con TRSOV chiusa o bassa pressione F/C sist. 2; 2 CLOSE inibito con bassa pressione F/C sist. 1. Un calo di pressione nell'altro sistema annulla la selezione e ripressurizza i servo (l'interruttore non torna da solo in posizione).<br>
         <b>Elettrovalvole</b> aperte da diseccitate: senza alimentazione DC restano aperte.<br>
-        <b>Valori indicativi (non da manuale):</b> portate delle pompe in % (HPS 4 ≈ 60% per il minor regime), costanti termiche, taratura valvola di sovrapressione (~235 bar), tempi di manovra del carrello, soglie Δp dei filtri e del by-pass, velocità di intasamento, tempo di intervento del termico della ELEC PUMP, comportamento termico dopo l'isolamento (l'ATA non lo descrive).
+        <b>Valori stimati:</b> portate delle pompe in % (HPS 4 ≈ 60% per il minor regime), costanti termiche, taratura valvola di sovrapressione (~235 bar), tempi di manovra del carrello, soglie Δp dei filtri e del by-pass, velocità di intasamento, tempo di intervento del termico della ELEC PUMP, comportamento termico dopo l'isolamento.
       </div>
     </div>
   </aside>
 </main>
-<footer>Simulatore didattico non ufficiale · basato sulla pubblicazione di addestramento ATA 29 – Hydraulic Power · © 2026 Simulatore creato da <b>Scarascia Simone</b> · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it" target="_blank" rel="noopener license" style="color:var(--cyan)">Licenza CC BY-NC-ND 4.0</a> · <a href="#" id="donFoot" style="color:#ffcc4d;font-weight:700">☕ Offrimi un caffè, se vuoi</a></footer>
+<footer>Simulatore amatoriale non ufficiale, da considerare un gioco · non verificato né approvato da alcun ente · © 2026 Simulatore creato da <b>Scarascia Simone</b> · <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it" target="_blank" rel="noopener license" style="color:var(--cyan)">Licenza CC BY-NC-ND 4.0</a></footer>
 
 <script>
 (()=>{
 'use strict';
-// ---------- constants (from ATA 29 training manual where available) ----------
+// ---------- constants ----------
 const TH={PNOM:207,pOn:163,pOff:190,tOn:134,tOff:127,EP0:105,EP1:90,RELIEF:235,EPMAX:120};
 const LEAKR={0:'Nessuna',0.03:'Lenta',0.1:'Media',0.3:'Rapida',0.8:'Massiva'};
 const LEAKL={pcm:'PCM / linea pompe (a monte SOV)',fc:'Linea servo rotore principale',tail:'Linea servo rotore di coda',util:'Linea utility (carrello)'};
@@ -430,7 +415,7 @@ function fresh(){return{
   hs:{}, ang:{ep:0,p1:0,p2:0,p4:0}, c:{}, freefall:false, loc:{}
 };}
 let S=fresh(), speed=0, quiet=false, prevCas=new Set(), casNew={}, casAck={}, prevV={};
-// CAS categories: all ATA 29 messages in the training manual are cautions (amber).
+// CAS categories: all hydraulic messages are cautions (amber).
 // The structure supports warnings/advisories for future systems.
 const CASCAT={};
 let actx=null, audioOn=false;
@@ -827,15 +812,15 @@ const fly=s=>{s.bat=true;s.eng=true;s.nr=100;s.P=[207,207];s.T=[56,58];s.wow=fal
 const grd=s=>{s.bat=true;s.eng=true;s.nr=100;s.P=[207,207];s.T=[56,58];};
 const SCN={
   cold:['Velivolo spento a terra','Batteria OFF, rotore fermo. Accendi la batteria per vedere sinottico e CAS: tutte le cautions di bassa pressione sono presenti finché non c\'è una fonte idraulica.',s=>{}],
-  pre:['Pre-flight check con ELEC PUMP','Sez. 11 “Pre-flight check”: la pompa elettrica pressurizza il solo sistema 1 a 105 bar (90 bar a portata massima). Pressione insufficiente a spegnere le cautions: 1-2-4 HYD PUMP, 1-2 SERVO, 1-2 HYD OIL PRESS, HYD UTIL PRESS, EMER LDG PRESS; SOV indeterminate. Prova “Esegui full & free”: arresto automatico dopo 2 min.',s=>{s.bat=true;s.ep.on=true;}],
-  norm:['Operazione normale a terra','Sez. 11 “Normal operations”: PUMP1 sul sist. 1, PUMP2 e PUMP4 sul sist. 2; comandi di volo e carrello a 207 bar; HYD1/HYD2 spenti.',grd],
+  pre:['Pre-flight check con ELEC PUMP','la pompa elettrica pressurizza il solo sistema 1 a 105 bar (90 bar a portata massima). Pressione insufficiente a spegnere le cautions: 1-2-4 HYD PUMP, 1-2 SERVO, 1-2 HYD OIL PRESS, HYD UTIL PRESS, EMER LDG PRESS; SOV indeterminate. Prova “Esegui full & free”: arresto automatico dopo 2 min.',s=>{s.bat=true;s.ep.on=true;}],
+  norm:['Operazione normale a terra','PUMP1 sul sist. 1, PUMP2 e PUMP4 sul sist. 2; comandi di volo e carrello a 207 bar; HYD1/HYD2 spenti.',grd],
   fly:['Volo normale','Carrello retratto, rotore 100%. Punto di partenza per iniettare avarie in volo.',fly],
   p2:['Avaria pompa 2','PUMP2 si guasta: PUMP4 da sola mantiene 207 bar nel sist. 2. Unica caution: 2 HYD PUMP.',s=>{fly(s);s.pump.p2.m='shear';}],
   p1:['Avaria pompa 1','Perdita totale del sist. 1: 1 HYD PUMP, 1 HYD OIL PRESS, 1 SERVO, EMER LDG PRESS; SOV1 e UTIL SOV1 indeterminate; estensione di emergenza del carrello non disponibile.',s=>{fly(s);s.pump.p1.m='shear';}],
   leak2:['Perdita rapida sistema 2 (50% → 28% → 22%)','Perdita a monte delle SOV nel PCM 2: osserva in sequenza 50% (UTIL SOV2 chiude, HYD UTIL PRESS, carrello in free fall), 28% (TRSOV chiude, UTIL SOV2 riapre, 2 SERVO, SOV1 CLOSE inibito), 22% (UTIL SOV2 richiude, 2 HYD MIN). Usa 5× o 20×.',s=>{fly(s);s.leak[1]={r:0.3,loc:'pcm'};s.L[1]=62;}],
   leak2t:['Perdita sulla linea servo di coda (sist. 2)','La perdita si arresta alla chiusura della TRSOV al 28%: la priorità va ai servo del rotore principale.',s=>{fly(s);s.leak[1]={r:0.3,loc:'tail'};s.L[1]=62;}],
   leak1:['Perdita rapida sistema 1','PCM 1: a 50% e 28% solo indicazione ambra; a 22% UTIL SOV1 chiude → 1 HYD MIN ed EMER LDG PRESS.',s=>{fly(s);s.leak[0]={r:0.3,loc:'pcm'};s.L[0]=62;}],
-  oh2:['Surriscaldamento sistema 2','Sez. 11 pag. 845: sopra 134 °C compaiono 2 HYD OIL TEMP e TEMP sul pannello; nessuna azione automatica. Procedura: conferma la temperatura sul sinottico, carrello giù, solleva la protezione e porta il selettore su 2 CLOSE → 2 HYD OIL PRESS, 2 SERVO, PRESS. Le linee servo del sist. 2 vanno in scarico: senza portata la temperatura scende e TEMP si spegne sotto 127 °C (il selettore resta su 2 CLOSE).',s=>{fly(s);s.heat[1]='fc';s.T[1]=118;}],
+  oh2:['Surriscaldamento sistema 2','sopra 134 °C compaiono 2 HYD OIL TEMP e TEMP sul pannello; nessuna azione automatica. Procedura: conferma la temperatura sul sinottico, carrello giù, solleva la protezione e porta il selettore su 2 CLOSE → 2 HYD OIL PRESS, 2 SERVO, PRESS. Le linee servo del sist. 2 vanno in scarico: senza portata la temperatura scende e TEMP si spegne sotto 127 °C (il selettore resta su 2 CLOSE).',s=>{fly(s);s.heat[1]='fc';s.T[1]=118;}],
   ohsw:['Falso allarme temperatura sistema 2','Si accendono 2 HYD OIL TEMP e TEMP, ma la lettura sul sinottico è normale: il primo passo della procedura è proprio confermare la sovratemperatura sul sinottico. Qui l\'isolamento non serve.',s=>{fly(s);s.heat[1]='sw';}],
   oh1s2:['2 SERVO + surriscaldamento sistema 1','Servo LEFT del sist. 2 in by-pass e sist. 1 in sovratemperatura: il selettore NON è inibito. Portare 1 CLOSE causa la perdita di controllo del servo LEFT (riquadro rosso). Da non fare!',s=>{fly(s);s.bypass='2-LEFT';s.heat[0]='fc';s.T[0]=125;}],
   wear:['Usura pompa 4 → grippaggio','La portata di case drain cresce: l\'indicatore meccanico nel PCM 2 scatta prima che la pompa si guasti. Alla fine la shear shaft si rompe proteggendo l\'MGB. Usa 20×.',s=>{grd(s);s.pump.p4.m='wear';s.pump.p4.h=0.92;}],
@@ -929,26 +914,6 @@ document.getElementById('mc').onclick=()=>ackCat('c');
 document.getElementById('mw').onclick=()=>ackCat('w');
 document.getElementById('aud').onclick=e=>{audioOn=!audioOn; if(audioOn&&!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(x){}}
   if(actx&&actx.state==='suspended')actx.resume(); e.target.textContent=audioOn?'🔊 Audio ON':'🔇 Audio OFF'; e.target.className=audioOn?'on':''; if(audioOn)chime('c');};
-// ---------- donations (fill in your usernames) ----------
-const DONATE={paypal:'scarasciasimone',revolut:'',kofi:''}; // es. paypal:'zerodi1981' → paypal.me/zerodi1981
-let donAmt=3;
-function donLinks(){
-  const pp=document.getElementById('donPP'),rv=document.getElementById('donRV'),kf=document.getElementById('donKF');
-  const set=(a,url,show)=>{a.style.display=show?'':'none'; if(show) a.href=url;};
-  set(pp,`https://www.paypal.me/${DONATE.paypal}/${donAmt}EUR`,!!DONATE.paypal);
-  set(rv,`https://revolut.me/${DONATE.revolut}`,!!DONATE.revolut);
-  set(kf,`https://ko-fi.com/${DONATE.kofi}`,!!DONATE.kofi);
-  pp.textContent=`PayPal · ${donAmt} €`;
-}
-const donEl=document.getElementById('don');
-const donOpen=e=>{if(e)e.preventDefault();donLinks();donEl.classList.remove('hide');};
-document.getElementById('donOpen').onclick=donOpen; document.getElementById('donCard').onclick=donOpen; document.getElementById('donFoot').onclick=donOpen;
-document.getElementById('donX').onclick=()=>donEl.classList.add('hide');
-donEl.addEventListener('click',e=>{if(e.target===donEl)donEl.classList.add('hide');});
-document.querySelectorAll('.amts button').forEach(b=>b.onclick=()=>{donAmt=+b.dataset.a;document.getElementById('donCustom').value='';
-  document.querySelectorAll('.amts button').forEach(x=>x.classList.toggle('sel',x===b));donLinks();});
-document.getElementById('donCustom').oninput=e=>{const v=Math.round(parseFloat(e.target.value)*100)/100;
-  if(v>0){donAmt=v;document.querySelectorAll('.amts button').forEach(x=>x.classList.remove('sel'));}donLinks();};
 const disc=document.getElementById('disc');
 document.getElementById('discYes').onclick=()=>{disc.classList.add('hide');speed=1;document.querySelectorAll('#spd button').forEach(x=>x.classList.toggle('on',x.dataset.s==='1'));};
 document.getElementById('discNo').onclick=()=>{document.getElementById('discMain').style.display='none';document.getElementById('discDenied').style.display='';};
