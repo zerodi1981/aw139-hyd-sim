@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulatore impianto idraulico AW139 – ATA 29</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e1116; --card:#161b22; --line:#2a313c; --txt:#d7dde5; --mute:#8b95a3;
+  --green:#2ecc40; --amber:#ffb000; --red:#e5322d; --cyan:#3ad0ff; --white:#e8e8e8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:'B612',system-ui,sans-serif;font-size:14px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line);background:#0b0e12;position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.3px}
+header h1 small{color:var(--mute);font-weight:400;margin-left:8px}
+.hctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,button,input{font-family:inherit;font-size:13px}
+select{background:#0b0e12;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+button{background:#222a35;color:var(--txt);border:1px solid #35404e;border-radius:6px;padding:6px 10px;cursor:pointer}
+button:hover{background:#2b3542}
+button.on{background:#14532d;border-color:var(--green);color:#c8ffd4}
+button.warn{background:#4a2a00;border-color:var(--amber);color:#ffe2a8}
+button:disabled{opacity:.4;cursor:not-allowed}
+.seg button{border-radius:0;margin-left:-1px}
+.seg button:first-child{border-radius:6px 0 0 6px}
+.seg button:last-child{border-radius:0 6px 6px 0}
+#clock{font-family:'B612 Mono',monospace;color:var(--cyan);min-width:70px;text-align:right}
+main{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:14px;padding:14px}
+@media (max-width:1100px){main{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.hydp,.ldgp{zoom:.62}main{padding:8px}.card{padding:8px}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--mute)}
+.mfd{background:#000;border:6px solid #1e232b;border-radius:10px;padding:6px;position:relative}
+.mfd svg{width:100%;height:auto;display:block}
+.mfd .off{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#555;font-family:'B612 Mono',monospace;background:#000;border-radius:4px}
+.mfd.dark .off{display:flex}
+#scnDesc{color:var(--mute);font-size:12.5px;margin:8px 2px 0;line-height:1.45}
+
+/* HYD control panel */
+.panels{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:14px;margin-top:14px}
+.hydp{margin:0;max-width:640px;background:#2b2b2b;border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:inset 0 0 0 2px #1a1a1a;font-family:'B612',sans-serif;color:#eee;position:relative}
+.screw{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ddd,#888);position:relative;flex:none}
+.screw:after{content:"";position:absolute;left:4px;right:4px;top:9px;height:4px;background:#333;transform:rotate(-30deg)}
+.vt{font-size:13px;line-height:1.25;text-align:center;color:#eee}
+.pnl-lbl{font-size:12px;text-align:center;margin-bottom:5px;color:#eee}
+.pbbox{border:2px solid #ddd;border-top:none;padding:0 8px 8px;border-radius:0 0 3px 3px}
+.pb{width:56px;height:52px;background:#111;border:2px solid #444;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:0;font-family:'B612',sans-serif}
+.pb span{font-size:13px;color:#3a3a3a;letter-spacing:.5px}
+.pb span.lit-g{color:var(--green);text-shadow:0 0 8px rgba(46,204,64,.8)}
+.pb span.lit-a{color:#ff9d1a;text-shadow:0 0 8px rgba(255,157,26,.8)}
+.ind{cursor:default}
+.sov{display:flex;flex-direction:column;align-items:center}
+.sovrow{display:flex;align-items:center;gap:8px}
+.close-v{font-size:11px;line-height:1.15;text-align:center}
+.swbox{width:58px;height:84px;background:#111;border-radius:4px;position:relative;overflow:visible;cursor:pointer}
+.lever{position:absolute;left:24px;top:28px;width:10px;height:38px;border-radius:5px;background:linear-gradient(90deg,#999,#eee,#999);transform-origin:50% 90%;transition:transform .25s}
+.lever:before{content:"";position:absolute;left:-4px;top:-8px;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#aaa)}
+.guard{position:absolute;left:4px;right:4px;top:2px;height:80px;border-radius:6px 6px 12px 12px;background:linear-gradient(180deg,#d22,#900);border:2px solid #600;transform-origin:50% 0;transition:transform .3s,opacity .3s;opacity:.92}
+.guard.open{transform:perspective(200px) rotateX(75deg);opacity:.55}
+.swbtns{display:flex;margin-top:7px}
+.swbtns button{font-size:11px;padding:3px 6px}
+.lampbtn{position:absolute;right:-6px;bottom:-34px;font-size:11px;padding:3px 8px}
+
+/* LDG GEAR panel */
+.ldgp{background:#2b2b2b;border-radius:6px;padding:10px 16px 12px;box-shadow:inset 0 0 0 2px #1a1a1a;color:#eee;display:flex;flex-direction:column;align-items:center;gap:6px}
+.ldgrow{display:flex;align-items:center;gap:16px}
+.glights{display:flex;flex-direction:column;align-items:center;gap:6px}
+.glights .gr{display:flex;gap:6px}
+.gl{width:46px;height:30px;background:#111;border:2px solid #444;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:9.5px;color:#3a3a3a;line-height:1.05}
+.gl b{font-size:12px}
+.gl.dn{color:var(--green);text-shadow:0 0 6px rgba(46,204,64,.9);border-color:#2a5}
+.gl.tr{color:#ff3b30;text-shadow:0 0 6px rgba(255,59,48,.9);border-color:#a33}
+.lvr{display:flex;align-items:center;gap:20px;font-size:11px;padding-right:8px}
+.lvlab{display:flex;flex-direction:column;justify-content:space-between;height:104px}
+.lvslot{width:22px;height:104px;background:#111;border-radius:11px;position:relative;cursor:pointer;box-shadow:inset 0 0 0 2px #444}
+.lvknob{position:absolute;left:-13px;width:48px;height:34px;border-radius:50%/45%;background:radial-gradient(circle at 50% 50%,#222 0 28%,#777 30% 34%,#1b1b1b 36% 100%);border:3px solid #555;transition:top .35s;box-shadow:0 3px 6px rgba(0,0,0,.6)}
+.lvknob.up{top:-4px}.lvknob.dn{top:74px}
+.lvknob.tr{box-shadow:0 0 14px 4px rgba(255,59,48,.85);border-color:#ff3b30}
+.egbox{width:74px;height:60px;position:relative;border-radius:6px;background:repeating-linear-gradient(45deg,#e8c000 0 7px,#111 7px 14px);display:flex;align-items:center;justify-content:center}
+.egbtn{width:50px;height:38px;border-radius:5px;background:#1a1a1a;border:2px solid #555;color:#888;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;cursor:pointer}
+.egbtn.act{background:#ffb000;color:#000;border-color:#ffd36b;box-shadow:0 0 12px rgba(255,176,0,.8)}
+.egguard{position:absolute;inset:-3px;border-radius:7px;background:linear-gradient(180deg,rgba(220,220,220,.55),rgba(140,140,140,.55));border:2px solid #bbb;cursor:pointer;transform-origin:50% 0;transition:transform .3s,opacity .3s}
+.egguard.open{transform:perspective(200px) rotateX(78deg);opacity:.5}
+.ldgnote{font-size:10.5px;color:#999;text-align:center;max-width:250px}
+
+/* CAS */
+.mfdin{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:6px}
+@media (max-width:760px){.mfdin{grid-template-columns:1fr}}
+.cas{background:#000;border:2px solid #2a2f37;border-radius:3px;min-height:220px;padding:6px 8px;font-family:'B612 Mono',monospace;font-size:13.5px;display:flex;flex-direction:column}
+.cas .hd{color:#8b95a3;font-size:11px;text-align:center;border-bottom:1px solid #333;padding-bottom:4px;margin-bottom:4px;letter-spacing:1px}
+.cas .w{color:#ff3b30;padding:1px 3px}
+.cas .w.new{animation:flashw 1s steps(1) infinite}
+.cas .adv{color:#2ecc40;padding:1px 3px}
+.cas .fill{flex:1}
+.cas .cnt{color:#8b95a3;font-size:11px;text-align:center}
+@keyframes flashw{50%{background:#ff3b30;color:#000}}
+.glare{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap}
+.mbtn{width:104px;height:50px;border-radius:6px;background:#1a1a1a;border:2px solid #333;font-family:'B612',sans-serif;font-weight:700;font-size:12.5px;line-height:1.2;letter-spacing:.5px;color:#3a3a3a;cursor:pointer}
+.mbtn.mw.lit{color:#fff;background:#c4161c;border-color:#ff5a5f;box-shadow:0 0 18px rgba(255,59,48,.7);animation:mflash .5s steps(1) infinite}
+.mbtn.mc.lit{color:#000;background:#ffb000;border-color:#ffd36b;box-shadow:0 0 18px rgba(255,176,0,.7);animation:mflash .5s steps(1) infinite}
+.mbtn.lamp.mw{color:#fff;background:#c4161c}.mbtn.lamp.mc{color:#000;background:#ffb000}
+@keyframes mflash{50%{filter:brightness(.45)}}
+.legend{display:flex;gap:12px;font-size:11.5px;color:var(--mute)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:0}
+.cas .c{color:#ffd200;padding:1px 0}
+.cas .c{padding:1px 3px}
+.cas .c.new{animation:blink 1s steps(1) infinite}
+.cas .m{color:var(--cyan);padding:1px 0}
+.cas .end{color:#fff;text-align:center;margin-top:6px;font-size:12px}
+.cas .sep{border-top:1px solid #333;margin:6px 0}
+@keyframes blink{50%{background:#ffd200;color:#000}}
+
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
+.row label{color:var(--txt)}
+.row .val{font-family:'B612 Mono',monospace;color:var(--cyan)}
+input[type=range]{width:150px;accent-color:var(--green)}
+.fgrid{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center}
+.fgrid select{width:100%}
+.sub{font-size:12px;color:var(--mute);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.6px}
+.chk{display:flex;gap:6px;align-items:center;font-size:13px}
+
+/* Maintenance */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:700px){.mgrid{grid-template-columns:1fr}}
+.pcm{border:1px solid var(--line);border-radius:8px;padding:10px;background:#11161d}
+.pcm h4{margin:0 0 8px;font-size:13px}
+.sight{display:flex;gap:10px;align-items:stretch}
+.glass{width:26px;height:110px;border:2px solid #556;border-radius:6px;position:relative;background:#0a0d11;flex:none}
+.glass .oil{position:absolute;left:2px;right:2px;bottom:2px;background:linear-gradient(180deg,#d63aa8,#8a1a6a);border-radius:3px}
+.glass .mk{position:absolute;left:-4px;right:-4px;border-top:1px dashed #9aa}
+.glass .mkl{position:absolute;left:30px;font-size:10px;color:#9aa;transform:translateY(-50%);white-space:nowrap}
+.ms{display:flex;flex-direction:column;gap:4px;font-size:12px;margin-left:44px}
+.led{display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;margin-right:6px;vertical-align:-1px}
+.led.on{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.popl{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin:5px 0}
+.pop{display:inline-block;width:14px;height:14px;border-radius:50%;background:#333;margin-right:6px;vertical-align:-2px;border:1px solid #555}
+.pop.up{background:var(--red);box-shadow:0 0 8px var(--red)}
+.popl button{font-size:11px;padding:2px 8px}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px}
+table.data td,table.data th{padding:4px 6px;border-bottom:1px solid #222a33;text-align:right}
+table.data th{color:var(--mute);font-weight:400}
+table.data td:first-child,table.data th:first-child{text-align:left;color:var(--mute)}
+table.data td{font-family:'B612 Mono',monospace}
+#log{font-family:'B612 Mono',monospace;font-size:12px;max-height:260px;overflow:auto;line-height:1.5}
+#log div span{color:var(--mute);margin-right:8px}
+#log .a{color:#ffd200}#log .g{color:var(--green)}#log .r{color:#ff6b66}#log .i{color:var(--cyan)}
+.note{color:var(--mute);font-size:12.5px;line-height:1.55}
+.note b{color:var(--txt)}
+.full{grid-column:1/-1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+#disc{position:fixed;inset:0;z-index:50;background:rgba(5,7,10,.86);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px}
+#disc.hide{display:none}
+.dbox{max-width:600px;width:100%;background:var(--card);border:1px solid #3a4452;border-top:4px solid var(--amber);border-radius:12px;padding:24px 26px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.dbox h2{margin:0 0 4px;font-size:19px;color:#fff;display:flex;align-items:center;gap:10px}
+.dbox .sub{color:var(--amber);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+.dbox p{margin:0 0 11px;line-height:1.55;color:#c9d1db;font-size:14px}
+.dbox ul{margin:0 0 12px 18px;padding:0;color:#c9d1db;line-height:1.55;font-size:14px}
+.dbox .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.dbox .acts button{padding:9px 16px;font-size:14px}
+.dbox .acc{background:#14532d;border-color:var(--green);color:#d6ffe0}
+.dbox .sign{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);text-align:center;color:var(--mute);font-size:12.5px}
+.dbox .sign b{color:var(--txt)}
+footer{text-align:center;color:var(--mute);font-size:12.5px;padding:6px 14px 22px}
+footer b{color:var(--txt)}
+</style>
+</head>
+<body>
+<div id="disc" role="dialog" aria-modal="true" aria-labelledby="discT">
+  <div class="dbox" id="discMain">
+    <h2 id="discT">⚠ Avviso importante</h2>
+    <div class="sub">Simulatore didattico non ufficiale</div>
+    <p>Questo è un simulatore <b>non ufficiale</b> dell'impianto idraulico dell'elicottero AW139 (ATA 29 – Hydraulic Power), realizzato a solo scopo di studio e ripasso personale.</p>
+    <p>Le logiche di funzionamento, le soglie e le indicazioni riproducono quanto descritto nella pubblicazione di addestramento ATA 29. Alcuni valori non riportati nel manuale sono stimati e sono indicati come tali all'interno della pagina.</p>
+    <ul>
+      <li>Non è prodotto, approvato né validato da Leonardo Helicopters o da alcuna autorità aeronautica.</li>
+      <li>Non sostituisce l'addestramento certificato e non può essere usato per attività di manutenzione, ricerca guasti, decisioni operative o qualsiasi scopo ufficiale.</li>
+      <li>Per ogni attività ufficiale fare riferimento esclusivamente alla documentazione approvata e in vigore (AMM / IETP, RFM, procedure aziendali).</li>
+    </ul>
+    <p>Proseguendo dichiari di aver letto e compreso queste limitazioni.</p>
+    <div class="acts"><button id="discNo">Non accetto</button><button class="acc" id="discYes">Accetto e proseguo</button></div>
+    <div class="sign">Simulatore creato da <b>Scarascia Simone</b></div>
+  </div>
+  <div class="dbox" id="discDenied" style="display:none;border-top-color:var(--red)">
+    <h2>Accesso non consentito</h2>
+    <div class="sub" style="color:#ff6b66">Condizioni non accettate</div>
+    <p>Per utilizzare il simulatore è necessario accettare le condizioni d'uso. Puoi chiudere questa pagina oppure rileggere l'avviso.</p>
+    <div class="acts"><button id="discBack">Rileggi l'avviso</button></div>
+    <div class="sign">Simulatore creato da <b>Scarascia Simone</b></div>
+  </div>
+</div>
+<header>
+  <h1>AW139 · Impianto idraulico <small>ATA 29 – Hydraulic Power · simulatore didattico</small></h1>
+  <div class="hctl">
+    <select id="scn"></select>
+    <button id="scnGo">Carica scenario</button>
+    <span class="seg" id="spd">
+      <button data-s="0">❚❚</button><button data-s="1" class="on">1×</button><button data-s="5">5×</button><button data-s="20">20×</button>
+    </span>
+    <span id="clock">00:00</span>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="card">
+      <div class="glare">
+        <button class="mbtn mw" id="mw" title="Premi per confermare i warning">MASTER<br>WARNING</button>
+        <button class="mbtn mc" id="mc" title="Premi per confermare le cautions">MASTER<br>CAUTION</button>
+        <button id="aud" title="Avviso acustico per nuovi messaggi">🔇 Audio OFF</button>
+        <span class="legend"><span><i style="background:#ff3b30"></i>Warning</span><span><i style="background:#ffd200"></i>Caution</span><span><i style="background:#2ecc40"></i>Advisory</span><span><i style="background:#3ad0ff"></i>Manutenzione</span></span>
+      </div>
+      <div class="mfd" id="mfd"><div class="mfdin"><svg id="syn" viewBox="0 0 985 495"></svg><div class="cas" id="cas"></div></div><div class="off">MFD — NESSUNA ALIMENTAZIONE ELETTRICA</div></div>
+      <div id="scnDesc"></div>
+      <div class="panels">
+      <div class="hydp" id="hydp">
+        <div class="screw"></div>
+        <div class="vt">H<br>Y<br>D</div>
+        <div>
+          <div class="pnl-lbl">ELECT PUMP</div>
+          <div class="pbbox"><button class="pb" id="pbEP" title="ELEC PUMP"><span id="lgEP">ON</span></button></div>
+        </div>
+        <div class="ind">
+          <div class="pnl-lbl">HYD 1</div>
+          <div class="pb" style="cursor:default"><span id="lgP1">PRESS</span><span id="lgT1">TEMP</span></div>
+        </div>
+        <div class="sov">
+          <div class="pnl-lbl">1 — SOV — 2</div>
+          <div class="sovrow">
+            <div class="close-v">C<br>L<br>O<br>S<br>E</div>
+            <div class="swbox" id="swbox" title="Clicca la protezione rossa per sollevarla">
+              <div class="lever" id="lever"></div>
+              <div class="guard" id="guard"></div>
+            </div>
+            <div class="close-v">C<br>L<br>O<br>S<br>E</div>
+          </div>
+          <div class="swbtns"><button data-p="-1">1 CLOSE</button><button data-p="0">NORM</button><button data-p="1">2 CLOSE</button></div>
+        </div>
+        <div class="ind">
+          <div class="pnl-lbl">HYD 2</div>
+          <div class="pb" style="cursor:default"><span id="lgP2">PRESS</span><span id="lgT2">TEMP</span></div>
+        </div>
+        <div class="screw"></div>
+        <button class="lampbtn" id="lamp" title="Tieni premuto">LAMP TEST</button>
+      </div>
+      <div class="ldgp" id="ldgp">
+        <div class="pnl-lbl" style="margin:0">LDG GEAR</div>
+        <div class="ldgrow">
+          <div class="glights">
+            <div class="gl" id="glN"><span>NOSE</span><b>▼</b></div>
+            <div class="gr"><div class="gl" id="glL"><span>LH</span><b>▼</b></div><div class="gl" id="glR"><span>RH</span><b>▼</b></div></div>
+          </div>
+          <div class="lvr">
+            <div class="lvlab"><span>UP</span><span>DN</span></div>
+            <div class="lvslot" id="lvslot" title="Clicca per spostare la leva"><div class="lvknob dn" id="lvknob"></div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="font-size:11px">EMERG DOWN</div>
+            <div class="egbox"><div class="egbtn" id="egbtn">PUSH</div><div class="egguard" id="egguard" title="Solleva la protezione"></div></div>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div style="height:30px"></div>
+    </div>
+
+    <div class="two">
+      <div class="card">
+        <h3>Manutenzione · PCM (indicatori meccanici)</h3>
+        <div class="mgrid" id="maint"></div>
+        <div class="row" style="margin-top:10px"><span class="note">Rabbocco serbatoi possibile solo a rotore fermo.</span><button id="refill">Rabbocca PCM 1 e 2</button></div>
+      </div>
+      <div class="card">
+        <h3>Dati di simulazione</h3>
+        <table class="data" id="data"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Registro eventi</h3>
+      <div id="log"></div>
+    </div>
+  </section>
+
+  <aside>
+    <div class="card">
+      <h3>Stato aeromobile</h3>
+      <div class="row"><label>Batteria / DC bus</label><button id="bBat">OFF</button></div>
+      <div class="row"><label>Motori · Nr <span class="val" id="vNr">0%</span></label><button id="bEng">AVVIA</button></div>
+      <div class="row"><label>Condizione (WOW)</label><button id="bWow">A TERRA</button></div>
+      <div class="row"><label>Attività comandi di volo <span class="val" id="vDem">10%</span></label><input type="range" id="rDem" min="0" max="100" value="10"></div>
+      <div class="row"><label>Controllo full &amp; free</label><button id="bFF">Esegui (20 s)</button></div>
+      <div class="row"><label>Banco idraulico (GE)</label><button id="bGe">SCOLLEGATO</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Iniezione avarie</h3>
+      <div class="sub">Pompe</div>
+      <div class="fgrid">
+        <label>PUMP 1 (HPS 1)</label><select data-pump="p1"></select>
+        <label>PUMP 2 (HPS 2)</label><select data-pump="p2"></select>
+        <label>PUMP 4 (HPS 4)</label><select data-pump="p4"></select>
+        <label>ELEC PUMP</label><select data-pump="ep"><option value="ok">Efficiente</option><option value="hot">Motore in sovratemperatura</option><option value="fail">Guasta</option></select>
+      </div>
+      <div class="sub">Perdite</div>
+      <div class="fgrid">
+        <label>Sist. 1 portata</label><select data-leakr="0"></select>
+        <label>Sist. 1 punto</label><select data-leakl="0"></select>
+        <label>Sist. 2 portata</label><select data-leakr="1"></select>
+        <label>Sist. 2 punto</label><select data-leakl="1"></select>
+      </div>
+      <div class="sub">Altre</div>
+      <div class="fgrid">
+        <label>Servo in by-pass</label><select id="fByp"></select>
+        <label>Surriscald. sist. 1</label><select data-heat="0"></select>
+        <label>Surriscald. sist. 2</label><select data-heat="1"></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+        <label class="chk"><input type="checkbox" data-f="clogP0">Filtro press. 1 intasato</label>
+        <label class="chk"><input type="checkbox" data-f="clogP1">Filtro press. 2 intasato</label>
+        <label class="chk"><input type="checkbox" data-f="clogR0">Filtro ritorno 1 intasato</label>
+        <label class="chk"><input type="checkbox" data-f="clogR1">Filtro ritorno 2 intasato</label>
+        <label class="chk" style="grid-column:1/-1"><input type="checkbox" id="fShut">Shuttle valve bloccata in posizione manutenzione</label>
+      </div>
+      <div class="note" style="margin-top:6px">L'intasamento dei filtri è progressivo: togliendo la spunta il filtro viene sostituito.</div>
+      <div class="row" style="margin-top:10px"><span></span><button id="bClr">Rimuovi tutte le avarie</button></div>
+    </div>
+
+    <div class="card">
+      <h3>Logiche implementate</h3>
+      <div class="note">
+        <b>Pressioni:</b> nominale 207 bar; PRESS / HYD OIL PRESS / HYD PUMP ON &lt; 163 bar, OFF &gt; 190 bar. ELEC PUMP 105 bar a portata nulla, 90 bar a portata massima, timer 2 min, inibita in volo.<br>
+        <b>Temperatura:</b> TEMP / HYD OIL TEMP ON &gt; 134 °C, OFF &lt; 127 °C (pag. 853; il pannello a pag. 801 indica 135 °C). Nessuna azione automatica: l'equipaggio conferma sul sinottico e isola con la SOV; le linee servo vanno in scarico, la pressione a monte e le utility restano.<br>
+<b>Filtri:</b> solo il filtro di ritorno ha la valvola di by-pass; il filtro di pressione no. Indicatori meccanici a scatto con reset manuale + interruttore Δp → messaggio di manutenzione n HYD FILTER e filtro ambra sul sinottico.<br>
+<b>Banco a terra (GE):</b> la shuttle valve manda il ritorno al serbatoio del banco, bypassando il PCM; se resta bloccata, la return by-pass valve scarica nel serbatoio PCM.<br>
+        <b>Livello:</b> 22% = 0,7 l (pag. 853). <b>PCM 2:</b> &lt;50% chiude UTIL SOV2 · &lt;28% chiude TRSOV e riapre UTIL SOV2 · &lt;22% richiude UTIL SOV2 (TRSOV resta chiusa). <b>PCM 1:</b> &lt;22% chiude UTIL SOV1; 50% e 28% solo indicazione ambra.<br>
+        <b>Interlock SOV:</b> 1 CLOSE inibito con TRSOV chiusa o bassa pressione F/C sist. 2; 2 CLOSE inibito con bassa pressione F/C sist. 1. Un calo di pressione nell'altro sistema annulla la selezione e ripressurizza i servo (l'interruttore non torna da solo in posizione).<br>
+        <b>Elettrovalvole</b> aperte da diseccitate: senza alimentazione DC restano aperte.<br>
+        <b>Valori indicativi (non da manuale):</b> portate delle pompe in % (HPS 4 ≈ 60% per il minor regime), costanti termiche, taratura valvola di sovrapressione (~235 bar), tempi di manovra del carrello, soglie Δp dei filtri e del by-pass, velocità di intasamento, tempo di intervento del termico della ELEC PUMP, comportamento termico dopo l'isolamento (l'ATA non lo descrive).
+      </div>
+    </div>
+  </aside>
+</main>
+<footer>Simulatore didattico non ufficiale · basato sulla pubblicazione di addestramento ATA 29 – Hydraulic Power · Simulatore creato da <b>Scarascia Simone</b></footer>
+
+<script>
+(()=>{
+'use strict';
+// ---------- constants (from ATA 29 training manual where available) ----------
+const TH={PNOM:207,pOn:163,pOff:190,tOn:134,tOff:127,EP0:105,EP1:90,RELIEF:235,EPMAX:120};
+const LEAKR={0:'Nessuna',0.03:'Lenta',0.1:'Media',0.3:'Rapida',0.8:'Massiva'};
+const LEAKL={pcm:'PCM / linea pompe (a monte SOV)',fc:'Linea servo rotore principale',tail:'Linea servo rotore di coda',util:'Linea utility (carrello)'};
+const PUMPM={ok:'Efficiente',wear:'Usura (case drain ↑)',shear:'Rottura albero (shear)',comp:'Compensatore bloccato'};
+const SERVOS=['FWD','LEFT','RIGHT','TAIL'];
+const HEATM={none:'Nessuno',fc:'Origine circuito F/C (isolabile con SOV)',pump:'Origine pompa (non isolabile)',sw:'Interruttore temp. guasto (falso allarme)'};
+const RES_L=0.7/0.22; // reservoir volume derived from ATA: 22% = 0.7 l
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function fresh(){return{
+  t:0,bat:false,eng:false,nr:0,wow:true,demand:10,ff:0,
+  gearLever:'DOWN',gear:1,emer:false,ffMsg:false,
+  sw:0,guard:false,eguard:false,ep:{on:false,t:0},ge:false,lamp:false,
+  L:[100,100],T:[20,20],P:[0,0],Tamb:20,
+  pump:{p1:{m:'ok',h:1},p2:{m:'ok',h:1},p4:{m:'ok',h:1},ep:{m:'ok'}},
+  leak:[{r:0,loc:'pcm'},{r:0,loc:'pcm'}],heat:['none','none'],clogP:[false,false],clogR:[false,false],bypass:'none',
+  clog:{p:[0,0],r:[0,0]},dpP:[0,0],dpR:[0,0],rbp:[false,false],unf:[0,0],shuttle:false,shutLog:false,epHot:0,
+  pop:{fp0:false,fr0:false,fp1:false,fr1:false,cd_p1:false,cd_ep:false,cd_p2:false,cd_p4:false},
+  hs:{}, ang:{ep:0,p1:0,p2:0,p4:0}, c:{}, freefall:false, loc:{}
+};}
+let S=fresh(), speed=0, quiet=false, prevCas=new Set(), casNew={}, casAck={}, prevV={};
+// CAS categories: all ATA 29 messages in the training manual are cautions (amber).
+// The structure supports warnings/advisories for future systems.
+const CASCAT={};
+let actx=null, audioOn=false;
+function chime(cat){ if(!audioOn||!actx) return; try{
+  const t0=actx.currentTime, tones=cat==='w'?[880,660,880,660]:[740,740];
+  tones.forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t0+i*0.22);g.gain.exponentialRampToValueAtTime(0.08,t0+i*0.22+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+i*0.22+0.18);
+    o.connect(g).connect(actx.destination);o.start(t0+i*0.22);o.stop(t0+i*0.22+0.2);});
+}catch(e){} }
+
+// ---------- logging ----------
+const logEl=document.getElementById('log');
+const fmt=t=>{t=Math.floor(t);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');};
+function log(msg,cls='i'){ if(quiet) return;
+  const d=document.createElement('div'); d.className=cls; d.innerHTML=`<span>${fmt(S.t)}</span>${msg}`;
+  logEl.prepend(d); while(logEl.children.length>250) logEl.lastChild.remove(); }
+
+// ---------- hysteresis switches ----------
+function hyst(k,on,off){ if(S.hs[k]){ if(off) S.hs[k]=false; } else if(on) S.hs[k]=true; return !!S.hs[k]; }
+const lowP=(k,p)=>hyst(k,p<TH.pOn,p>TH.pOff);
+
+// ---------- physics step ----------
+function step(dt){
+  S.t+=dt;
+  const powered=S.bat||S.nr>60; // battery or generators on line
+  S.powered=powered;
+  S.nr+=clamp((S.eng?100:0)-S.nr,-5*dt,8*dt);
+
+  // electric pump management
+  const ep=S.ep;
+  if(ep.on){
+    ep.t+=dt;
+    if(!S.bat){ep.on=false;log('ELEC PUMP OFF: alimentazione DC assente');}
+    else if(!S.wow){ep.on=false;log('ELEC PUMP OFF: inibita in condizione di volo','a');}
+    else if(ep.t>=TH.EPMAX){ep.on=false;log('ELEC PUMP: arresto automatico (timer 2 min)','a');}
+    else if(S.pump.ep.m==='hot'){S.epHot+=dt; if(S.epHot>15){ep.on=false;log('ELEC PUMP: intervento dell\'interruttore di sovratemperatura del motore','a');}}
+  } else S.epHot=Math.max(0,S.epHot-dt*0.2);
+  const epRun=ep.on&&S.pump.ep.m!=='fail';
+
+  // mechanical pump capacities (fraction of nominal flow)
+  const cap={};
+  for(const k of ['p1','p2','p4']){
+    const p=S.pump[k];
+    if(p.m==='wear'&&p.h>0){
+      p.h=Math.max(0,p.h-dt*0.0035*(S.nr/100));
+      if(p.h<0.85&&!S.pop['cd_'+k]){S.pop['cd_'+k]=true;log(`PCM: indicatore case drain ${k.toUpperCase()} estratto (avaria pompa imminente)`,'r');}
+      if(p.h<=0){p.m='shear';log(`PUMP ${k[1]}: grippaggio → rottura shear shaft, MGB protetto`,'r');syncFaultUI();}
+    }
+    let c=(k==='p4'?0.6:1)*S.nr/100;
+    if(p.m==='shear') c=0; else if(p.m==='wear') c*=(0.3+0.7*p.h);
+    cap[k]=c;
+  }
+  // level microswitches → UTIL SOV / TRSOV (solenoids need DC power to close)
+  const L=S.L, v={};
+  v.util2=!(powered&&((L[1]<50&&L[1]>=28)||L[1]<22));
+  v.tr=!(powered&&L[1]<28);
+  v.util1=!(powered&&L[0]<22);
+  // F/C SOV: switch + interlocks (previous-step pressure switch states)
+  const fcLow1=!!S.hs.fc1, fcLow2=!!S.hs.fc2;
+  v.sov1=!(powered&&S.sw===-1&&v.tr&&!fcLow2);
+  v.sov2=!(powered&&S.sw===1&&!fcLow1);
+  S.inh1=S.sw===-1&&v.sov1; S.inh2=S.sw===1&&v.sov2;
+
+  // flight-control demand
+  let d=S.demand/100;
+  if(S.ff>0){S.ff-=dt; d=Math.max(d,0.55+0.45*Math.abs(Math.sin(S.t*1.3))); if(S.ff<=0) log('Controllo full & free completato');}
+  const fc=0.42*d, tl=0.12*d;
+
+  // landing gear (NORM = sys 2 utility, EMER = sys 1 utility)
+  const u2=S.c.u2P||0,u1=S.c.u1P||0; let gq=[0,0];
+  const prevGear=S.gear;
+  if(S.gearLever==='UP'&&!S.emer&&!S.wow&&S.gear>0&&u2>120){S.gear=Math.max(0,S.gear-dt/7);gq[1]=0.3;}
+  else if(S.gearLever==='DOWN'&&S.gear<1&&u2>120){S.gear=Math.min(1,S.gear+dt/6);gq[1]=0.3;}
+  if(S.gear<1&&u2<80){ S.gear=Math.min(1,S.gear+dt/4); if(!S.freefall){S.freefall=true;log('Carrello: perdita pressione NORM → estensione per gravità (free fall)','a');} }
+  if(S.emer&&S.gear<1&&u1>120){S.gear=Math.min(1,S.gear+dt/5);gq[0]=0.25;}
+  if(S.gear>=1&&prevGear<1){log('Carrello giù e bloccato','g');S.freefall=false;}
+  if(S.gear<=0&&prevGear>0) log('Carrello su e bloccato','g');
+
+  const out=[{},{}];
+  for(let i=0;i<2;i++){
+    const P=S.P[i], sovO=i?v.sov2:v.sov1, utilO=i?v.util2:v.util1, trO=i?v.tr:true;
+    // leak
+    const lk=S.leak[i]; let act=false;
+    if(lk.r>0){ act = lk.loc==='pcm'?true: lk.loc==='fc'?sovO: lk.loc==='tail'?(sovO&&trO): utilO; }
+    const leakQ=act?lk.r*Math.sqrt(Math.max(P,0)/TH.PNOM):0;
+    const Q=(sovO?fc+(trO?tl:0):0)+gq[i]+leakQ;
+    // sources
+    const cav=clamp(L[i]/6,0,1);
+    const pumps=i?['p2','p4']:['p1'];
+    // progressive filter clogging (fault active) – unticking = filter replaced
+    S.clog.p[i]=S.clogP[i]?Math.min(1,S.clog.p[i]+dt/120):0;
+    S.clog.r[i]=S.clogR[i]?Math.min(1,S.clog.r[i]+dt/90):0;
+    // pressure filter: NO by-pass (ATA) → restriction reduces deliverable flow
+    let c=pumps.reduce((a,k)=>a+cap[k],0)*cav*(1-0.9*Math.pow(S.clog.p[i],3));
+    let tMech=0;
+    if(c>0.003) tMech=Q<=c?TH.PNOM:TH.PNOM*c/Q;
+    const compStuck=pumps.some(k=>S.pump[k].m==='comp'&&cap[k]>0.05);
+    if(compStuck&&c>Q) tMech=Math.min(TH.RELIEF,TH.PNOM+120*(c-Q));
+    let tEP=0;
+    if(i===0&&epRun){const ce=0.3*cav; tEP=Q<=ce?TH.EP0-(TH.EP0-TH.EP1)*Q/ce:TH.EP1*ce/Q;}
+    let tGE=0; if(S.ge){tGE=Q<=1.2?TH.PNOM:TH.PNOM*1.2/Q;}
+    const target=Math.max(tMech,tEP,tGE);
+    S.P[i]=P+(target-P)*Math.min(1,dt*4);
+    // reservoir
+    if(!S.ge) S.L[i]=Math.max(0,L[i]-leakQ*(100/60)*dt); // with GE the return bypasses the PCM reservoir
+    // temperature
+    const running=c>0.02||(i===0&&epRun)||S.ge;
+    let wearHeat=0; pumps.forEach(k=>{if(S.pump[k].m==='wear')wearHeat+=10+25*(1-S.pump[k].h);});
+    const hm=S.heat[i];
+    const extra=(hm==='fc'&&sovO&&running)?110:(hm==='pump'&&pumps.some(k=>cap[k]>0.03))?110:0;
+    const Tt=S.Tamb+(running?32+18*Math.min(1,Q)+wearHeat+(compStuck?70:0)+(i===0&&epRun&&c<0.02?8:0):0)+extra;
+    S.T[i]+=(Tt-S.T[i])*dt/(Tt>S.T[i]?45:80);
+    // filter indicators (latching mechanical pop-outs)
+    const flowing=S.P[i]>50, retQ=flowing?0.3+Q:0; // return = servo/utility return + case drain
+    S.dpP[i]=S.clog.p[i]*(flowing?0.3+Q:0); S.dpR[i]=S.clog.r[i]*retQ;
+    if(S.dpP[i]>0.35&&!S.pop['fp'+i]){S.pop['fp'+i]=true;log(`PCM ${i+1}: indicatore Δp filtro PRESSIONE estratto (filtro senza by-pass)`,'r');}
+    if(S.dpR[i]>0.35&&!S.pop['fr'+i]){S.pop['fr'+i]=true;log(`PCM ${i+1}: indicatore Δp filtro RITORNO estratto`,'r');}
+    // return filter by-pass valve (spring loaded: opens on high Δp, recloses when Δp drops)
+    const rb=S.rbp[i];
+    if(!rb&&S.dpR[i]>0.55){S.rbp[i]=true;log(`PCM ${i+1}: valvola by-pass filtro ritorno APERTA – olio in ricircolo non filtrato`,'a');}
+    else if(rb&&S.dpR[i]<0.48){S.rbp[i]=false;log(`PCM ${i+1}: valvola by-pass filtro ritorno richiusa (Δp ridotto)`,'g');}
+    if(S.rbp[i]) S.unf[i]+=dt;
+    out[i]={Q,leakQ,c,tMech,tEP,tGE,compStuck,running,fcQ:(sovO?fc+(trO?tl:0):0),utQ:gq[i]};
+  }
+  // pump outlet pressures (each pump isolated by its check valve)
+  const po={p1:cap.p1>0.03?S.P[0]:0,p2:cap.p2>0.03?S.P[1]:0,p4:cap.p4>0.03?S.P[1]:0};
+  // fan animation
+  S.ang.p1+=cap.p1*900*dt;S.ang.p2+=cap.p2*900*dt;S.ang.p4+=cap.p4*1500*dt;if(epRun)S.ang.ep+=600*dt;
+
+  const c=S.c;
+  c.fc1P=v.sov1?S.P[0]:0; c.fc2P=v.sov2?S.P[1]:0; c.tail2P=(v.sov2&&v.tr)?S.P[1]:0;
+  c.u1P=v.util1?S.P[0]:0; c.u2P=v.util2?S.P[1]:0;
+  c.fc1=lowP('fc1',c.fc1P); c.fc2=lowP('fc2',c.fc2P); c.tail2=lowP('tail2',c.tail2P);
+  c.u1=lowP('u1',c.u1P); c.u2=lowP('u2',c.u2P);
+  c.s1=lowP('s1',S.P[0]); c.s2=lowP('s2',S.P[1]);
+  c.pp1=lowP('pp1',po.p1); c.pp2=lowP('pp2',po.p2); c.pp4=lowP('pp4',po.p4);
+  c.t1=hyst('t1',S.T[0]>TH.tOn,S.T[0]<TH.tOff)||(S.heat[0]==='sw'&&powered); c.t2=hyst('t2',S.T[1]>TH.tOn,S.T[1]<TH.tOff)||(S.heat[1]==='sw'&&powered);
+  // servo halves
+  c.half={};
+  for(const s of SERVOS){
+    c.half['1'+s]=c.fc1||S.bypass==='1-'+s;
+    c.half['2'+s]=(s==='TAIL'?c.tail2:c.fc2)||S.bypass==='2-'+s;
+  }
+  c.servo1=SERVOS.some(s=>c.half['1'+s]); c.servo2=SERVOS.some(s=>c.half['2'+s]);
+  S.v=v; S.cap=cap; S.out=out; S.po=po; S.epRun=epRun;
+  // shuttle valve seized in maintenance position after GE removal → return by-pass valve relieves to PCM reservoir
+  S.retBp=S.shuttle&&!S.ge&&(S.P[0]>50||S.P[1]>50);
+  if(S.retBp&&!S.shutLog){S.shutLog=true;log('Shuttle valve bloccata in posizione manutenzione: sovrapressione sul ritorno → RETURN BY-PASS VALVE aperta verso il serbatoio PCM','a');}
+  if(!S.retBp) S.shutLog=false;
+
+  // loss of control check
+  for(const s of SERVOS){
+    const both=c.half['1'+s]&&c.half['2'+s]&&S.nr>60;
+    if(both&&!S.loc[s]){S.loc[s]=true; if(!S.wow) log(`PERDITA DI CONTROLLO: servo ${s} senza pressione su entrambi i sistemi`,'r');}
+    if(!both) S.loc[s]=false;
+  }
+  // valve transition log
+  const names={sov1:'SOV1 (F/C)',sov2:'SOV2 (F/C)',util1:'UTIL SOV1',util2:'UTIL SOV2',tr:'TRSOV'};
+  for(const k in names){ if(prevV[k]!==undefined&&prevV[k]!==v[k]) log(`${names[k]} ${v[k]?'APERTA':'CHIUSA'}`+(k==='tr'||k.startsWith('util')?` (livello PCM ${k==='util1'?1:2}: ${S.L[k==='util1'?0:1].toFixed(0)}%)`:''),v[k]?'g':'a'); prevV[k]=v[k]; }
+}
+
+function casList(){
+  const c=S.c,L=S.L;
+  return [
+    ['1 HYD OIL PRESS',c.fc1],['2 HYD OIL PRESS',c.fc2],
+    ['1 SERVO',c.servo1],['2 SERVO',c.servo2],
+    ['1 HYD PUMP',c.pp1],['2 HYD PUMP',c.pp2],['4 HYD PUMP',c.pp4],
+    ['HYD UTIL PRESS',c.u2],['EMER LDG PRESS',c.u1],
+    ['1 HYD OIL TEMP',c.t1],['2 HYD OIL TEMP',c.t2],
+    ['1 HYD MIN',S.powered&&L[0]<22],['2 HYD MIN',S.powered&&L[1]<22],
+  ].filter(x=>x[1]).map(x=>x[0]);
+}
+function maintList(){
+  const m=[]; for(let i=0;i<2;i++) if(S.dpP[i]>0.35||S.dpR[i]>0.35) m.push(`${i+1} HYD FILTER`); return m;
+}
+
+// ---------- SVG synoptic ----------
+const svg=document.getElementById('syn'), NS='http://www.w3.org/2000/svg';
+function el(tag,a,p){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);(p||svg).appendChild(e);return e;}
+function txt(x,y,s,a={},p){const e=el('text',Object.assign({x,y,fill:'#fff','font-size':13,'font-family':'B612 Mono, monospace','text-anchor':'middle'},a),p);e.textContent=s;return e;}
+const lines=[];
+function ln(d,key,w=9){const e=el('path',{d,fill:'none','stroke-width':w,'stroke-linejoin':'round','stroke-linecap':'butt'});lines.push({e,key});return e;}
+const M=(x,s)=>s?985-x:x;
+const fans={}, valves={}, R={};
+function fan(id,x,y){const g=el('g',{transform:`translate(${x},${y})`});const c=el('circle',{r:18,fill:'#000',stroke:'#fff','stroke-width':2.5},g);
+  const r=el('g',{},g); for(let k=0;k<3;k++) el('path',{d:'M0,0 C5,-5 11,-11 3,-16 C-4,-14 -4,-6 0,0',fill:'#fff',transform:`rotate(${k*120})`},r);
+  el('circle',{r:3,fill:'#000'},g); fans[id]={c,r};}
+function valve(id,x,y,flowDir){const g=el('g',{transform:`translate(${x},${y})`});const c=el('circle',{r:13,fill:'#000','stroke-width':2.5},g);
+  const b=el('line',{'stroke-width':3},g); valves[id]={c,b,flowDir};}
+
+function build(){
+  // bar gauge
+  txt(492,26,'1  BAR  2',{'font-size':20,'font-family':'B612, sans-serif'});
+  R.pb=[0,1].map(i=>{const x=i?495:447;el('rect',{x,y:38,width:43,height:30,fill:'#000',stroke:'#888','stroke-width':1.5});return {r:svg.lastChild,t:txt(x+21.5,60,'0',{'font-size':19,fill:'#2ecc40'})};});
+  const gx=486,gy=86,gh=150,sc=p=>gy+gh-p/250*gh;
+  el('rect',{x:gx,y:gy,width:13,height:gh,fill:'none',stroke:'#c22','stroke-width':2});
+  [[0,100,'#c22'],[100,163,'#ffd200'],[163,215,'#3fbf3f'],[215,232,'#ffd200'],[232,250,'#c22']].forEach(([a,b,col])=>el('rect',{x:gx+2,y:sc(b),width:9,height:sc(a)-sc(b),fill:col,opacity:col==='#c22'?0.25:1}));
+  R.ptr=[el('polygon',{points:'0,-7 12,0 0,7',fill:'#2ecc40'}),el('polygon',{points:'0,-7 -12,0 0,7',fill:'#2ecc40'})];
+  R.sc=sc;
+
+  for(const s of [0,1]){
+    const X=x=>M(x,s);
+    // temperature box
+    el('rect',{x:X(240)-45,y:40,width:90,height:30,fill:'#000',stroke:'#888','stroke-width':1.5});
+    R['tb'+s]=svg.lastChild; R['tt'+s]=txt(X(240),62,'--°C',{'font-size':19,fill:'#2ecc40'});
+    // reservoir
+    el('rect',{x:X(240)-20,y:86,width:40,height:84,rx:6,fill:'#000',stroke:'#888','stroke-width':1.5});
+    R['lv'+s]=el('rect',{x:X(240)-18,y:88,width:36,height:80,rx:4,fill:'#2ecc40'});
+    el('ellipse',{cx:X(240),cy:88,rx:20,ry:6,fill:'#000',stroke:'#888','stroke-width':1.5});
+    R['lt'+s]=txt(X(240)+(s?-35:35),140,'100%',{'font-size':19,fill:'#2ecc40','text-anchor':s?'end':'start'});
+    // suction / return (low pressure) lines
+    ln(`M${X(240)},170 V205 M${X(240)},275 V315 H${X(290)} V205 H${X(302)} M${X(290)},262 H${X(302)}`,'suc'+s,8);
+    ln(`M${X(222)},240 H${X(190)} V190 H${X(222)} V170`,'ret'+s,8);
+    el('polygon',{points:`${X(240)},205 ${X(275)},240 ${X(240)},275 ${X(205)},240`,fill:'#000',stroke:'#fff','stroke-width':3});
+    R['flt'+s]=el('line',{x1:X(222),y1:240,x2:X(258),y2:240,stroke:'#fff','stroke-width':2,'stroke-dasharray':'3 3'});
+    // pump outlets
+    ln(`M${X(338)},205 H${X(360)} V262`,s?'p4o':'ep');
+    ln(`M${X(338)},262 H${X(360)}`,s?'p2o':'p1o');
+    ln(`M${X(360)},262 V307 M${X(360)},275 H${X(382)}`,'src'+s);
+    ln(`M${X(408)},275 H${X(442)}`,'util'+s);
+    // flight control lines
+    ln(`M${X(360)},333 V460 M${X(360)},355 H${X(440)} M${X(360)},385 H${X(440)} M${X(360)},415 H${X(440)}`,'fc'+s);
+    if(s){ ln(`M625,460 H603`,'fc1'); ln(`M577,460 H545`,'tail1'); } else ln(`M360,460 H440`,'fc0');
+    // components
+    if(s){fan('p4',665,205);fan('p2',665,262);txt(665,180,'PUMP4');txt(665,296,'PUMP2');}
+    else {fan('ep',320,205);fan('p1',320,262);txt(320,180,'ELEC PUMP');txt(320,296,'PUMP1');}
+    valve('util'+(s?2:1),X(395),275,'h'); txt(X(395),246,'UTIL',{'font-size':12}); txt(X(395),259,'SOV'+(s?2:1),{'font-size':12});
+    valve('sov'+(s?2:1),X(360),320,'v'); txt(X(360)+(s?30:-30),344,'SOV'+(s?2:1),{'font-size':12});
+  }
+  valve('tr',590,460,'h'); txt(590,440,'TRSOV',{'font-size':12});
+  txt(492,262,'LDG GEAR',{'font-size':12});
+  R.emer=el('rect',{x:443,y:266,width:47,height:19,fill:'#000','stroke-width':1.5}); R.emerT=txt(466.5,280,'EMER',{'font-size':12});
+  R.norm=el('rect',{x:495,y:266,width:47,height:19,fill:'#000','stroke-width':1.5}); R.normT=txt(518.5,280,'NORM',{'font-size':12});
+  txt(492,338,'MAIN SERVO',{'font-size':12}); txt(492,447,'TAIL SERVO',{'font-size':12});
+  R.servo={};
+  [['FWD',355],['LEFT',385],['RIGHT',415],['TAIL',460]].forEach(([n,y])=>{
+    const h1=el('rect',{x:440,y:y-11,width:52.5,height:22,fill:'#000','stroke-width':2.5});
+    const h2=el('rect',{x:492.5,y:y-11,width:52.5,height:22,fill:'#000','stroke-width':2.5});
+    el('rect',{x:465,y:y-8,width:55,height:16,fill:'#000',stroke:'#ddd','stroke-width':1});
+    const t=txt(492.5,y+4.5,n,{'font-size':12});
+    R.servo[n]={h1,h2,t};
+  });
+  R.inh=txt(492,488,'',{'font-size':12,fill:'#ffd200'});
+}
+
+const GREEN='#2ecc40',AMBER='#ffb000',WHITE='#e8e8e8',GREY='#555',RED='#e5322d';
+const pcol=p=>p>=TH.pOn?GREEN:p>=30?AMBER:WHITE;
+
+function render(){
+  const v=S.v||{}, c=S.c, P=S.P, on=S.powered;
+  document.getElementById('mfd').classList.toggle('dark',!on);
+  // lines
+  const keyP={src0:P[0],src1:P[1],util0:c.u1P,util1:c.u2P,fc0:c.fc1P,fc1:c.fc2P,tail1:c.tail2P,
+    ep:S.epRun?P[0]:0,p1o:S.po.p1,p2o:S.po.p2,p4o:S.po.p4};
+  for(const {e,key} of lines){
+    let col;
+    if(key.startsWith('suc')||key.startsWith('ret')) col=S.L[+key.slice(3)]>2?WHITE:GREY;
+    else col=pcol(keyP[key]);
+    e.setAttribute('stroke',col);
+  }
+  for(let i=0;i<2;i++){
+    const p=Math.round(P[i]);
+    R.pb[i].t.textContent=p; R.pb[i].t.setAttribute('fill',p<TH.pOn?'#fff':GREEN); R.pb[i].r.setAttribute('fill',p<TH.pOn?RED:'#000');
+    const y=R.sc(clamp(P[i],0,250)); R.ptr[i].setAttribute('transform',`translate(${i?507:478},${y})`); R.ptr[i].setAttribute('fill',p<TH.pOn?AMBER:GREEN);
+    const T=S.T[i], hot=c['t'+(i+1)];
+    R['tt'+i].textContent=Math.round(T)+'°C'; R['tt'+i].setAttribute('fill',hot?'#fff':GREEN); R['tb'+i].setAttribute('fill',hot?RED:'#000');
+    const L=S.L[i], lc=L<50?AMBER:GREEN, hh=80*clamp(L,0,100)/100;
+    R['lv'+i].setAttribute('height',hh); R['lv'+i].setAttribute('y',88+80-hh); R['lv'+i].setAttribute('fill',lc);
+    R['lt'+i].textContent=Math.round(L)+'%'; R['lt'+i].setAttribute('fill',lc);
+    R['flt'+i].setAttribute('stroke',S.dpP[i]>0.35||S.dpR[i]>0.35?AMBER:'#fff');
+  }
+  // fans
+  const fstate={ep:[S.epRun,S.pump.ep.m!=='ok'],p1:[S.cap.p1>0.03,S.pump.p1.m!=='ok'],p2:[S.cap.p2>0.03,S.pump.p2.m!=='ok'],p4:[S.cap.p4>0.03,S.pump.p4.m!=='ok']};
+  for(const k in fans){const [run,bad]=fstate[k];const f=fans[k];
+    f.r.setAttribute('transform',`rotate(${S.ang[k]%360})`);
+    const col=(k!=='ep'&&c['pp'+k[1]]&&S.nr>60)||(bad&&S.pump[k].m==='shear')?AMBER:'#fff';
+    f.c.setAttribute('stroke',col); f.r.querySelectorAll('path').forEach(p=>p.setAttribute('fill',run?(k==='ep'?GREEN:'#fff'):col));}
+  // valves
+  const vs={sov1:[v.sov1,c.s1],sov2:[v.sov2,c.s2],util1:[v.util1,c.s1],util2:[v.util2,c.s2],tr:[v.tr,c.s2]};
+  for(const k in valves){const [open,low]=vs[k];const o=valves[k];
+    const undet=open&&low;
+    o.c.setAttribute('stroke',open?(undet?AMBER:'#fff'):AMBER);
+    o.c.setAttribute('stroke-dasharray',undet?'4 3':'');
+    const along=o.flowDir; const dir=open?along:(along==='h'?'v':'h');
+    if(undet){o.b.setAttribute('stroke','none');continue;}
+    o.b.setAttribute('stroke',open?'#fff':AMBER);
+    if(dir==='h'){o.b.setAttribute('x1',-11);o.b.setAttribute('x2',11);o.b.setAttribute('y1',0);o.b.setAttribute('y2',0);}
+    else{o.b.setAttribute('x1',0);o.b.setAttribute('x2',0);o.b.setAttribute('y1',-11);o.b.setAttribute('y2',11);}
+  }
+  // landing gear legends
+  const lg=(rect,t,open,pres)=>{const col=!open?AMBER:pres?GREEN:'#fff';rect.setAttribute('stroke',col);t.setAttribute('fill',col);};
+  lg(R.emer,R.emerT,v.util1,!c.u1); lg(R.norm,R.normT,v.util2,!c.u2);
+  for(const s of SERVOS){const o=R.servo[s];const a=c.half['1'+s],b=c.half['2'+s];const lost=a&&b&&S.nr>60;
+    o.h1.setAttribute('stroke',lost?RED:a?AMBER:GREEN); o.h2.setAttribute('stroke',lost?RED:b?AMBER:GREEN);}
+  R.inh.textContent=S.inh1?'SOV1 CLOSE INIBITO':S.inh2?'SOV2 CLOSE INIBITO':'';
+
+  // HYD panel lamps
+  const lamp=S.lamp&&on;
+  const setL=(id,lit,cls)=>{document.getElementById(id).className=(lit&&on)||lamp?cls:'';};
+  setL('lgEP',S.ep.on,'lit-g'); setL('lgP1',c.fc1,'lit-a'); setL('lgP2',c.fc2,'lit-a'); setL('lgT1',c.t1,'lit-a'); setL('lgT2',c.t2,'lit-a');
+  document.getElementById('guard').classList.toggle('open',S.guard);
+  document.getElementById('lever').style.transform=`rotate(${S.sw*28}deg)`;
+  document.querySelectorAll('.swbtns button').forEach(b=>{b.disabled=!S.guard;b.classList.toggle('on',+b.dataset.p===S.sw);});
+
+  // CAS
+  const cas=on?casList():[], mnt=on?maintList():[];
+  const now=new Set(cas);
+  let newOne=null;
+  for(const m of cas) if(!prevCas.has(m)){casNew[m]=S.t; casAck[m]=false; log('CAS ▲ '+m,'a'); newOne=m;}
+  for(const m of prevCas) if(!now.has(m)){ log('CAS ▼ '+m+' (spenta)','g'); delete casNew[m]; delete casAck[m]; }
+  prevCas=now;
+  if(newOne) chime(CASCAT[newOne]||'c');
+  const ce=document.getElementById('cas');
+  // priority: warnings, cautions, advisories; newest first inside each category
+  const pr={w:0,c:1,a:2}, cls={w:'w',c:'c',a:'adv'};
+  const sorted=[...cas].sort((a,b)=>(pr[CASCAT[a]||'c']-pr[CASCAT[b]||'c'])||((casNew[b]||0)-(casNew[a]||0)));
+  let html;
+  if(!on) html='<div class="end" style="color:#555;margin-top:80px">CAS NON ALIMENTATO</div>';
+  else html='<div class="hd">CAS</div>'+sorted.map(m=>`<div class="${cls[CASCAT[m]||'c']}${casAck[m]===false?' new':''}">${m}</div>`).join('')
+    +'<div class="fill"></div>'+(mnt.length?'<div class="sep"></div>'+mnt.map(m=>`<div class="m">${m}</div>`).join(''):'')+'<div class="end">END</div>'
+    +`<div class="cnt">${cas.length} msg${cas.some(m=>casAck[m]===false)?' · non confermati':''}</div>`;
+  if(ce._h!==html){ce.innerHTML=html;ce._h=html;}
+  const unW=on&&cas.some(m=>CASCAT[m]==='w'&&casAck[m]===false), unC=on&&cas.some(m=>(CASCAT[m]||'c')==='c'&&casAck[m]===false);
+  const mwb=document.getElementById('mw'), mcb=document.getElementById('mc');
+  mwb.className='mbtn mw'+(unW?' lit':'')+(lamp?' lamp':''); mcb.className='mbtn mc'+(unC?' lit':'')+(lamp?' lamp':'');
+
+  // aircraft controls
+  document.getElementById('clock').textContent=fmt(S.t);
+  const bb=(id,onState,txtOn,txtOff,cls='on')=>{const b=document.getElementById(id);b.textContent=onState?txtOn:txtOff;b.className=onState?cls:'';};
+  bb('bBat',S.bat,'ON','OFF'); bb('bEng',S.eng,'SPEGNI','AVVIA'); bb('bWow',!S.wow,'IN VOLO','A TERRA','warn'); bb('bGe',S.ge,'COLLEGATO','SCOLLEGATO');
+  document.getElementById('vNr').textContent=Math.round(S.nr)+'%';
+  // landing gear panel (nose gear locks slightly before the mains)
+  const g=S.gear, pos={glN:[g>=0.93,g<=0.06],glL:[g>=1,g<=0],glR:[g>=0.985,g<=0.015]};
+  let anyTr=false;
+  for(const id in pos){const [dn,up]=pos[id];const e=document.getElementById(id);
+    const st=!on?'':(lamp?'dn':dn?'dn':up?'':'tr'); if(on&&!dn&&!up)anyTr=true;
+    e.className='gl'+(st?' '+st:'');}
+  document.getElementById('lvknob').className='lvknob '+(S.gearLever==='UP'?'up':'dn')+((on&&anyTr)||lamp?' tr':'');
+  document.getElementById('egguard').classList.toggle('open',S.eguard);
+  document.getElementById('egbtn').className='egbtn'+(S.emer||lamp?' act':'');
+  document.getElementById('bFF').textContent=S.ff>0?`In corso ${Math.ceil(S.ff)} s`:'Esegui (20 s)';
+
+  renderMaint(); renderData();
+}
+
+function renderMaint(){
+  const m=document.getElementById('maint'); const pp=[['p1','ep'],['p2','p4']];
+  const html=[0,1].map(i=>{
+    const L=S.L[i], sw=[50,28,22].map(t=>`<div><span class="led ${L<t?'on':''}"></span>${t}% ${t===22?'MIN':'LOW'} LEVEL</div>`).join('');
+    const pops=[['fp'+i,'Δp filtro pressione'],['fr'+i,'Δp filtro ritorno'],...pp[i].map(k=>['cd_'+k,'Case drain '+(k==='ep'?'ELEC PUMP':k.toUpperCase().replace('P','PUMP '))])]
+      .map(([k,n])=>`<div class="popl"><span><span class="pop ${S.pop[k]?'up':''}"></span>${n}</span><button data-reset="${k}">Reset</button></div>`).join('');
+    return `<div class="pcm"><h4>PCM ${i+1}</h4>
+      <div class="sight"><div class="glass"><div class="oil" style="height:${Math.round(clamp(L,0,100))*1.02}px"></div>
+        <div class="mk" style="bottom:${100}px"></div><div class="mkl" style="bottom:${92}px">FULL</div>
+        <div class="mk" style="bottom:${60}px"></div><div class="mkl" style="bottom:${52}px">ADD</div></div>
+        <div class="ms">${sw}</div></div>
+      ${pops}
+      <div class="popl"><span>Δp filtro press. / ritorno</span><span class="val" style="font-family:'B612 Mono',monospace">${Math.round(S.dpP[i]*100)} / ${Math.round(S.dpR[i]*100)}</span></div>
+      <div class="popl"><span>By-pass filtro ritorno</span><span style="color:${S.rbp[i]?'var(--amber)':'var(--mute)'}">${S.rbp[i]?'APERTO':'chiuso'}</span></div>
+      <div class="popl"><span>Olio non filtrato</span><span style="color:${S.unf[i]>0?'var(--amber)':'var(--mute)'}">${Math.round(S.unf[i])} s${S.unf[i]>0?' – campionare il fluido':''}</span></div>
+      ${i===1?`<div class="popl"><span>Return by-pass valve (shuttle)</span><span style="color:${S.retBp?'var(--amber)':'var(--mute)'}">${S.retBp?'APERTA':'chiusa'}</span></div>`:''}
+      </div>`;
+  }).join('');
+  if(m._h!==html){m.innerHTML=html;m._h=html;}
+}
+const hp=k=>S.pump[k].m==='shear'?'0%':(S.pump[k].h*100).toFixed(0)+'%';
+function renderData(){
+  const o=S.out||[{},{}], v=S.v||{};
+  const f=x=>x==null?'–':x;
+  const rows=[
+    ['','Sist. 1','Sist. 2'],
+    ['Pressione (bar)',S.P[0].toFixed(0),S.P[1].toFixed(0)],
+    ['Temperatura (°C)',S.T[0].toFixed(1),S.T[1].toFixed(1)],
+    ['Livello serbatoio (%)',S.L[0].toFixed(1),S.L[1].toFixed(1)],
+    ['Volume serbatoio (l)',(S.L[0]/100*RES_L).toFixed(2),(S.L[1]/100*RES_L).toFixed(2)],
+    ['Portata richiesta (%)',f(o[0].Q!=null?(o[0].Q*100).toFixed(0):null),f(o[1].Q!=null?(o[1].Q*100).toFixed(0):null)],
+    ['Capacità pompe mecc. (%)',f(o[0].c!=null?(o[0].c*100).toFixed(0):null),f(o[1].c!=null?(o[1].c*100).toFixed(0):null)],
+    ['Portata perdita (%)',f(o[0].leakQ!=null?(o[0].leakQ*100).toFixed(1):null),f(o[1].leakQ!=null?(o[1].leakQ*100).toFixed(1):null)],
+    ['F/C SOV',v.sov1?'APERTA':'CHIUSA',v.sov2?'APERTA':'CHIUSA'],
+    ['UTIL SOV',v.util1?'APERTA':'CHIUSA',v.util2?'APERTA':'CHIUSA'],
+    ['TRSOV','—',v.tr?'APERTA':'CHIUSA'],
+    ['Salute pompe','P1 '+hp('p1'),'P2 '+hp('p2')+' · P4 '+hp('p4')],
+    ['ELEC PUMP timer',S.ep.on?Math.max(0,TH.EPMAX-S.ep.t).toFixed(0)+' s':'—','']
+  ];
+  document.getElementById('data').innerHTML=rows.map((r,i)=>`<tr>${r.map(x=>i?`<td>${x}</td>`:`<th>${x}</th>`).join('')}</tr>`).join('');
+}
+
+// ---------- scenarios (from the manual's operation/failure pages) ----------
+const fly=s=>{s.bat=true;s.eng=true;s.nr=100;s.P=[207,207];s.T=[56,58];s.wow=false;s.gearLever='UP';s.gear=0;s.demand=25;};
+const grd=s=>{s.bat=true;s.eng=true;s.nr=100;s.P=[207,207];s.T=[56,58];};
+const SCN={
+  cold:['Velivolo spento a terra','Batteria OFF, rotore fermo. Accendi la batteria per vedere sinottico e CAS: tutte le cautions di bassa pressione sono presenti finché non c\'è una fonte idraulica.',s=>{}],
+  pre:['Pre-flight check con ELEC PUMP','Sez. 11 “Pre-flight check”: la pompa elettrica pressurizza il solo sistema 1 a 105 bar (90 bar a portata massima). Pressione insufficiente a spegnere le cautions: 1-2-4 HYD PUMP, 1-2 SERVO, 1-2 HYD OIL PRESS, HYD UTIL PRESS, EMER LDG PRESS; SOV indeterminate. Prova “Esegui full & free”: arresto automatico dopo 2 min.',s=>{s.bat=true;s.ep.on=true;}],
+  norm:['Operazione normale a terra','Sez. 11 “Normal operations”: PUMP1 sul sist. 1, PUMP2 e PUMP4 sul sist. 2; comandi di volo e carrello a 207 bar; HYD1/HYD2 spenti.',grd],
+  fly:['Volo normale','Carrello retratto, rotore 100%. Punto di partenza per iniettare avarie in volo.',fly],
+  p2:['Avaria pompa 2','PUMP2 si guasta: PUMP4 da sola mantiene 207 bar nel sist. 2. Unica caution: 2 HYD PUMP.',s=>{fly(s);s.pump.p2.m='shear';}],
+  p1:['Avaria pompa 1','Perdita totale del sist. 1: 1 HYD PUMP, 1 HYD OIL PRESS, 1 SERVO, EMER LDG PRESS; SOV1 e UTIL SOV1 indeterminate; estensione di emergenza del carrello non disponibile.',s=>{fly(s);s.pump.p1.m='shear';}],
+  leak2:['Perdita rapida sistema 2 (50% → 28% → 22%)','Perdita a monte delle SOV nel PCM 2: osserva in sequenza 50% (UTIL SOV2 chiude, HYD UTIL PRESS, carrello in free fall), 28% (TRSOV chiude, UTIL SOV2 riapre, 2 SERVO, SOV1 CLOSE inibito), 22% (UTIL SOV2 richiude, 2 HYD MIN). Usa 5× o 20×.',s=>{fly(s);s.leak[1]={r:0.3,loc:'pcm'};s.L[1]=62;}],
+  leak2t:['Perdita sulla linea servo di coda (sist. 2)','La perdita si arresta alla chiusura della TRSOV al 28%: la priorità va ai servo del rotore principale.',s=>{fly(s);s.leak[1]={r:0.3,loc:'tail'};s.L[1]=62;}],
+  leak1:['Perdita rapida sistema 1','PCM 1: a 50% e 28% solo indicazione ambra; a 22% UTIL SOV1 chiude → 1 HYD MIN ed EMER LDG PRESS.',s=>{fly(s);s.leak[0]={r:0.3,loc:'pcm'};s.L[0]=62;}],
+  oh2:['Surriscaldamento sistema 2','Sez. 11 pag. 845: sopra 134 °C compaiono 2 HYD OIL TEMP e TEMP sul pannello; nessuna azione automatica. Procedura: conferma la temperatura sul sinottico, carrello giù, solleva la protezione e porta il selettore su 2 CLOSE → 2 HYD OIL PRESS, 2 SERVO, PRESS. Le linee servo del sist. 2 vanno in scarico: senza portata la temperatura scende e TEMP si spegne sotto 127 °C (il selettore resta su 2 CLOSE).',s=>{fly(s);s.heat[1]='fc';s.T[1]=118;}],
+  ohsw:['Falso allarme temperatura sistema 2','Si accendono 2 HYD OIL TEMP e TEMP, ma la lettura sul sinottico è normale: il primo passo della procedura è proprio confermare la sovratemperatura sul sinottico. Qui l\'isolamento non serve.',s=>{fly(s);s.heat[1]='sw';}],
+  oh1s2:['2 SERVO + surriscaldamento sistema 1','Servo LEFT del sist. 2 in by-pass e sist. 1 in sovratemperatura: il selettore NON è inibito. Portare 1 CLOSE causa la perdita di controllo del servo LEFT (riquadro rosso). Da non fare!',s=>{fly(s);s.bypass='2-LEFT';s.heat[0]='fc';s.T[0]=125;}],
+  wear:['Usura pompa 4 → grippaggio','La portata di case drain cresce: l\'indicatore meccanico nel PCM 2 scatta prima che la pompa si guasti. Alla fine la shear shaft si rompe proteggendo l\'MGB. Usa 20×.',s=>{grd(s);s.pump.p4.m='wear';s.pump.p4.h=0.92;}],
+  filt:['Intasamento filtro di ritorno PCM 1','Intasamento progressivo: prima scattano l\'indicatore Δp rosso e il messaggio 1 HYD FILTER (filtro ambra sul sinottico), poi con Δp più alto si apre la valvola di by-pass e l\'olio ricircola non filtrato. Aumenta l\'attività comandi: il Δp cresce con la portata. Il filtro di pressione invece non ha by-pass.',s=>{grd(s);s.clogR[0]=true;s.clog.r[0]=0.55;s.demand=30;}],
+  filtp:['Intasamento filtro di pressione PCM 2','Il filtro di pressione non ha by-pass: con l\'intasamento la portata disponibile cala e, a forte richiesta (prova full & free), la pressione del sistema 2 scende fino alle cautions.',s=>{grd(s);s.clogP[1]=true;s.clog.p[1]=0.6;}],
+  ge:['Banco idraulico a terra (GE)','Motori spenti, banco collegato agli attacchi rapidi dei PCM: entrambi i sistemi a 207 bar per attività di manutenzione.',s=>{s.bat=true;s.ge=true;}],
+};
+function loadScenario(k){
+  S=fresh(); prevV={}; SCN[k][2](S);
+  quiet=true; for(let i=0;i<60;i++) step(0.05); quiet=false;
+  prevCas=new Set(S.powered?casList():[]); casNew={}; casAck={}; prevCas.forEach(m=>{casNew[m]=0;casAck[m]=true;}); S.t=0; logEl.innerHTML='';
+  log('Scenario caricato: '+SCN[k][0],'i');
+  document.getElementById('scnDesc').textContent=SCN[k][1];
+  syncFaultUI(); document.getElementById('rDem').value=S.demand; document.getElementById('vDem').textContent=S.demand+'%';
+}
+
+// ---------- UI wiring ----------
+const scnSel=document.getElementById('scn');
+for(const k in SCN){const o=document.createElement('option');o.value=k;o.textContent=SCN[k][0];scnSel.appendChild(o);}
+document.getElementById('scnGo').onclick=()=>loadScenario(scnSel.value);
+scnSel.onchange=()=>{document.getElementById('scnDesc').textContent='Selezionato: '+SCN[scnSel.value][1]+' → premi “Carica scenario”.';};
+document.querySelectorAll('#spd button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll('#spd button').forEach(x=>x.classList.toggle('on',x===b));});
+
+document.querySelectorAll('select[data-pump]').forEach(s=>{
+  if(s.dataset.pump!=='ep') for(const k in PUMPM){const o=document.createElement('option');o.value=k;o.textContent=PUMPM[k];s.appendChild(o);}
+  s.onchange=()=>{const p=S.pump[s.dataset.pump];p.m=s.value;if(p.h!==undefined&&s.value!=='shear')p.h=s.value==='wear'?Math.min(p.h,0.95):1;log(`Avaria iniettata: ${s.dataset.pump.toUpperCase()} → ${s.options[s.selectedIndex].text}`,'r');};
+});
+document.querySelectorAll('select[data-leakr]').forEach(s=>{for(const k in LEAKR){const o=document.createElement('option');o.value=k;o.textContent=LEAKR[k];s.appendChild(o);}
+  s.onchange=()=>{S.leak[+s.dataset.leakr].r=+s.value;log(`Perdita sist. ${+s.dataset.leakr+1}: ${LEAKR[s.value]}`,+s.value?'r':'g');};});
+document.querySelectorAll('select[data-leakl]').forEach(s=>{for(const k in LEAKL){if(k==='tail'||true){const o=document.createElement('option');o.value=k;o.textContent=LEAKL[k];s.appendChild(o);}}
+  s.onchange=()=>{S.leak[+s.dataset.leakl].loc=s.value;};});
+const byp=document.getElementById('fByp');
+[['none','Nessuno']].concat([1,2].flatMap(n=>SERVOS.map(x=>[n+'-'+x,`Sist. ${n} · ${x}`]))).forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;byp.appendChild(o);});
+byp.onchange=()=>{S.bypass=byp.value;log('Servo by-pass: '+byp.options[byp.selectedIndex].text,byp.value==='none'?'g':'r');};
+document.querySelectorAll('input[data-f]').forEach(cb=>cb.onchange=()=>{const k=cb.dataset.f,i=+k.slice(-1),n=k.slice(0,-1);S[n][i]=cb.checked;log(`${cb.parentElement.textContent.trim()}: ${cb.checked?'intasamento in corso':'filtro sostituito'}`,cb.checked?'r':'g');});
+document.querySelectorAll('select[data-heat]').forEach(s=>{for(const k in HEATM){const o=document.createElement('option');o.value=k;o.textContent=HEATM[k];s.appendChild(o);}
+  s.onchange=()=>{S.heat[+s.dataset.heat]=s.value;log(`Surriscaldamento sist. ${+s.dataset.heat+1}: ${HEATM[s.value]}`,s.value==='none'?'g':'r');};});
+document.getElementById('fShut').onchange=e=>{S.shuttle=e.target.checked;log('Shuttle valve bloccata: '+(S.shuttle?'ATTIVA':'rimossa'),S.shuttle?'r':'g');};
+function syncFaultUI(){
+  document.querySelectorAll('select[data-pump]').forEach(s=>s.value=S.pump[s.dataset.pump].m);
+  document.querySelectorAll('select[data-leakr]').forEach(s=>s.value=String(S.leak[+s.dataset.leakr].r));
+  document.querySelectorAll('select[data-leakl]').forEach(s=>s.value=S.leak[+s.dataset.leakl].loc);
+  byp.value=S.bypass;
+  document.querySelectorAll('input[data-f]').forEach(cb=>{const k=cb.dataset.f;cb.checked=S[k.slice(0,-1)][+k.slice(-1)];});
+  document.querySelectorAll('select[data-heat]').forEach(s=>s.value=S.heat[+s.dataset.heat]);
+  document.getElementById('fShut').checked=S.shuttle;
+}
+document.getElementById('bClr').onclick=()=>{for(const k of ['p1','p2','p4']){S.pump[k].m='ok';S.pump[k].h=1;}S.pump.ep.m='ok';
+  S.leak=[{r:0,loc:'pcm'},{r:0,loc:'pcm'}];S.heat=['none','none'];S.clogP=[false,false];S.clogR=[false,false];S.bypass='none';S.shuttle=false;syncFaultUI();log('Tutte le avarie rimosse (indicatori meccanici da resettare a mano)','g');};
+
+document.getElementById('bBat').onclick=()=>{S.bat=!S.bat;log('Batteria '+(S.bat?'ON':'OFF'));};
+document.getElementById('bEng').onclick=()=>{
+  if(S.eng&&!S.wow){log('Spegnimento motori non consentito in volo','a');return;}
+  if(!S.eng&&!S.bat){log('Avviamento impossibile: batteria OFF','a');return;}
+  if(!S.eng&&S.ge){log('Scollegare il banco idraulico prima dell\'avviamento','a');return;}
+  S.eng=!S.eng;log(S.eng?'Avviamento motori – MGB trascina le pompe meccaniche':'Spegnimento motori');};
+document.getElementById('bWow').onclick=()=>{
+  if(S.wow){ if(S.nr<95){log('Decollo non possibile: Nr inferiore al 95%','a');return;} S.wow=false; log('Decollo – condizione di volo (ELEC PUMP inibita)'); }
+  else { if(S.gear<1){log('Atterraggio non possibile: carrello non giù e bloccato','a');return;} S.wow=true; log('Atterraggio – a terra'); }};
+const rDem=document.getElementById('rDem'); rDem.oninput=()=>{S.demand=+rDem.value;document.getElementById('vDem').textContent=rDem.value+'%';};
+document.getElementById('bFF').onclick=()=>{if(S.ff>0)return;S.ff=20;log('Controllo full & free dei comandi di volo');};
+document.getElementById('lvslot').onclick=()=>{
+  if(S.gearLever==='DOWN'){ if(S.wow){log('Leva carrello UP: retrazione inibita a terra (WOW)','a');return;} S.gearLever='UP';log('Leva carrello UP'); }
+  else { S.gearLever='DOWN';log('Leva carrello DOWN'); } };
+document.getElementById('egguard').onclick=()=>{S.eguard=!S.eguard;if(!S.eguard&&S.emer){S.emer=false;log('Protezione EMERG DOWN abbassata: selezione di emergenza resettata');}else log('Protezione EMERG DOWN '+(S.eguard?'sollevata':'abbassata'));};
+document.getElementById('egbtn').onclick=()=>{ if(!S.eguard) return;
+  if(S.emer){log('EMERG DOWN già selezionato');return;}
+  S.emer=true; log('EMERG DOWN premuto – estensione tramite circuito EMER (sist. 1, UTIL SOV1)','a');
+  if(S.c.u1) log('Pressione EMER insufficiente: estensione di emergenza non disponibile – carrello in caduta libera solo se manca pressione NORM','a'); };
+document.getElementById('bGe').onclick=()=>{ if(!S.ge&&S.eng){log('Banco idraulico collegabile solo a motori spenti','a');return;} S.ge=!S.ge;log(S.ge?'Banco idraulico collegato – shuttle valve in posizione manutenzione':'Banco idraulico scollegato – flow restrictor scarica la pressione residua');};
+document.getElementById('refill').onclick=()=>{if(S.nr>1){log('Rabbocco non consentito con rotore in moto','a');return;}S.L=[100,100];log('Serbatoi PCM rabboccati a FULL','g');};
+document.getElementById('maint').addEventListener('click',e=>{const k=e.target.dataset.reset;if(!k)return;S.pop[k]=false;log('Reset indicatore meccanico '+k);});
+
+document.getElementById('pbEP').onclick=()=>{
+  if(S.ep.on){S.ep.on=false;log('ELEC PUMP OFF');return;}
+  if(!S.bat){log('ELEC PUMP: nessuna alimentazione DC','a');return;}
+  if(!S.wow){log('ELEC PUMP: selezione inibita in condizione di volo','a');return;}
+  S.ep.on=true;S.ep.t=0;log('ELEC PUMP ON – timer 2 min avviato','g');};
+document.getElementById('guard').onclick=()=>{S.guard=!S.guard; if(!S.guard&&S.sw!==0){S.sw=0;log('Protezione abbassata: selettore SOV riportato al centro');} else log('Protezione selettore SOV '+(S.guard?'sollevata':'abbassata'));};
+document.querySelectorAll('.swbtns button').forEach(b=>b.onclick=()=>{if(!S.guard)return;const p=+b.dataset.p;if(p===S.sw)return;S.sw=p;
+  log('Selettore SOV → '+(p===-1?'1 CLOSE':p===1?'2 CLOSE':'NORM'),'i');
+  if(p===-1&&S.c.servo2&&!S.c.fc2&&S.v.tr) log('ATTENZIONE: 2 SERVO presente – chiudere SOV1 sul sistema non affetto causa perdita di controllo del servo','r');
+  if(p===-1&&(!S.v.tr||S.c.fc2)) log('1 CLOSE inefficace: '+(!S.v.tr?'TRSOV chiusa':'bassa pressione F/C sist. 2'),'a');
+  if(p===1&&S.c.fc1) log('2 CLOSE inefficace: bassa pressione F/C sist. 1','a');});
+const ackCat=cat=>{let n=0;for(const m of prevCas) if((CASCAT[m]||'c')===cat&&casAck[m]===false){casAck[m]=true;n++;} if(n)log(`MASTER ${cat==='w'?'WARNING':'CAUTION'} premuto: ${n} messaggi confermati`);};
+document.getElementById('mc').onclick=()=>ackCat('c');
+document.getElementById('mw').onclick=()=>ackCat('w');
+document.getElementById('aud').onclick=e=>{audioOn=!audioOn; if(audioOn&&!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(x){}}
+  if(actx&&actx.state==='suspended')actx.resume(); e.target.textContent=audioOn?'🔊 Audio ON':'🔇 Audio OFF'; e.target.className=audioOn?'on':''; if(audioOn)chime('c');};
+const disc=document.getElementById('disc');
+document.getElementById('discYes').onclick=()=>{disc.classList.add('hide');speed=1;document.querySelectorAll('#spd button').forEach(x=>x.classList.toggle('on',x.dataset.s==='1'));};
+document.getElementById('discNo').onclick=()=>{document.getElementById('discMain').style.display='none';document.getElementById('discDenied').style.display='';};
+document.getElementById('discBack').onclick=()=>{document.getElementById('discDenied').style.display='none';document.getElementById('discMain').style.display='';};
+const lamp=document.getElementById('lamp');
+const lOn=()=>{S.lamp=true;},lOff=()=>{S.lamp=false;};
+lamp.addEventListener('pointerdown',lOn);['pointerup','pointerleave','pointercancel'].forEach(e=>lamp.addEventListener(e,lOff));
+
+// ---------- loop ----------
+build();
+loadScenario('cold');
+window.__sim={get S(){return S},step,casList,loadScenario,render};
+let last=performance.now();
+function frame(now){
+  const real=Math.min(0.1,(now-last)/1000); last=now;
+  let sim=real*speed; while(sim>0){const h=Math.min(0.05,sim);step(h);sim-=h;}
+  render(); requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
