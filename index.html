@@ -166,9 +166,16 @@ table.data td{font-family:'B612 Mono',monospace}
 .dbox .sign b{color:var(--txt)}
 footer{text-align:center;color:var(--mute);font-size:12.5px;padding:6px 14px 22px}
 footer b{color:var(--txt)}
+.toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:40;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(560px,92vw)}
+.toast{background:#1d2530;border:1px solid #3a4452;border-left:4px solid var(--cyan);color:#e6edf3;padding:10px 14px;border-radius:8px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:tin .25s ease-out;transition:opacity .4s,transform .4s;width:100%}
+.toast.a{border-left-color:var(--amber)}.toast.r{border-left-color:var(--red)}.toast.g{border-left-color:var(--green)}
+.toast.out{opacity:0;transform:translateY(8px)}
+@keyframes tin{from{opacity:0;transform:translateY(10px)}}
+.eptim{font-family:'B612 Mono',monospace;font-size:11px;color:var(--green);text-align:center;height:14px;margin-top:3px}
 </style>
 </head>
 <body>
+<div class="toasts" id="toasts"></div>
 <div id="disc" role="dialog" aria-modal="true" aria-labelledby="discT">
   <div class="dbox" id="discMain">
     <h2 id="discT">⚠ Avviso importante</h2>
@@ -221,7 +228,7 @@ footer b{color:var(--txt)}
         <div class="vt">H<br>Y<br>D</div>
         <div>
           <div class="pnl-lbl">ELECT PUMP</div>
-          <div class="pbbox"><button class="pb" id="pbEP" title="ELEC PUMP"><span id="lgEP">ON</span></button></div>
+          <div class="pbbox"><button class="pb" id="pbEP" title="ELEC PUMP"><span id="lgEP">ON</span></button></div><div class="eptim" id="epTim"></div>
         </div>
         <div class="ind">
           <div class="pnl-lbl">HYD 1</div>
@@ -385,6 +392,9 @@ function chime(cat){ if(!audioOn||!actx) return; try{
 // ---------- logging ----------
 const logEl=document.getElementById('log');
 const fmt=t=>{t=Math.floor(t);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');};
+function note(msg,cls='a'){ log(msg,cls); if(quiet) return; toast(msg,cls); }
+function toast(msg,cls){ const box=document.getElementById('toasts'); if(!box) return; const d=document.createElement('div'); d.className='toast '+cls; d.textContent=msg; box.appendChild(d);
+  setTimeout(()=>d.classList.add('out'),4200); setTimeout(()=>d.remove(),4700); while(box.children.length>3) box.firstChild.remove(); }
 function log(msg,cls='i'){ if(quiet) return;
   const d=document.createElement('div'); d.className=cls; d.innerHTML=`<span>${fmt(S.t)}</span>${msg}`;
   logEl.prepend(d); while(logEl.children.length>250) logEl.lastChild.remove(); }
@@ -404,10 +414,10 @@ function step(dt){
   const ep=S.ep;
   if(ep.on){
     ep.t+=dt;
-    if(!S.bat){ep.on=false;log('ELEC PUMP OFF: alimentazione DC assente');}
-    else if(!S.wow){ep.on=false;log('ELEC PUMP OFF: inibita in condizione di volo','a');}
-    else if(ep.t>=TH.EPMAX){ep.on=false;log('ELEC PUMP: arresto automatico (timer 2 min)','a');}
-    else if(S.pump.ep.m==='hot'){S.epHot+=dt; if(S.epHot>15){ep.on=false;log('ELEC PUMP: intervento dell\'interruttore di sovratemperatura del motore','a');}}
+    if(!S.bat){ep.on=false;note('ELEC PUMP OFF: alimentazione DC assente','a');}
+    else if(!S.wow){ep.on=false;note('ELEC PUMP OFF: inibita in condizione di volo','a');}
+    else if(ep.t>=TH.EPMAX){ep.on=false;note('ELEC PUMP: arresto automatico (timer 2 min)','a');}
+    else if(S.pump.ep.m==='hot'){S.epHot+=dt; if(S.epHot>15){ep.on=false;note('ELEC PUMP: intervento dell\'interruttore di sovratemperatura del motore','a');}}
   } else S.epHot=Math.max(0,S.epHot-dt*0.2);
   const epRun=ep.on&&S.pump.ep.m!=='fail';
 
@@ -671,7 +681,8 @@ function render(){
   // HYD panel lamps
   const lamp=S.lamp&&on;
   const setL=(id,lit,cls)=>{document.getElementById(id).className=(lit&&on)||lamp?cls:'';};
-  setL('lgEP',S.ep.on,'lit-g'); setL('lgP1',c.fc1,'lit-a'); setL('lgP2',c.fc2,'lit-a'); setL('lgT1',c.t1,'lit-a'); setL('lgT2',c.t2,'lit-a');
+  setL('lgEP',S.ep.on,'lit-g');
+  {const r=Math.max(0,TH.EPMAX-S.ep.t);document.getElementById('epTim').textContent=S.ep.on&&on?`${Math.floor(r/60)}:${String(Math.floor(r%60)).padStart(2,'0')}`:'';} setL('lgP1',c.fc1,'lit-a'); setL('lgP2',c.fc2,'lit-a'); setL('lgT1',c.t1,'lit-a'); setL('lgT2',c.t2,'lit-a');
   document.getElementById('guard').classList.toggle('open',S.guard);
   document.getElementById('lever').style.transform=`rotate(${S.sw*28}deg)`;
   document.querySelectorAll('.swbtns button').forEach(b=>{b.disabled=!S.guard;b.classList.toggle('on',+b.dataset.p===S.sw);});
@@ -825,38 +836,42 @@ document.getElementById('bClr').onclick=()=>{for(const k of ['p1','p2','p4']){S.
 
 document.getElementById('bBat').onclick=()=>{S.bat=!S.bat;log('Batteria '+(S.bat?'ON':'OFF'));};
 document.getElementById('bEng').onclick=()=>{
-  if(S.eng&&!S.wow){log('Spegnimento motori non consentito in volo','a');return;}
-  if(!S.eng&&!S.bat){log('Avviamento impossibile: batteria OFF','a');return;}
-  if(!S.eng&&S.ge){log('Scollegare il banco idraulico prima dell\'avviamento','a');return;}
+  if(S.eng&&!S.wow){note('Spegnimento motori non consentito in volo','a');return;}
+  if(!S.eng&&!S.bat){note('Avviamento impossibile: batteria OFF','a');return;}
+  if(!S.eng&&S.ge){note('Scollegare il banco idraulico prima dell\'avviamento','a');return;}
   S.eng=!S.eng;log(S.eng?'Avviamento motori – MGB trascina le pompe meccaniche':'Spegnimento motori');};
 document.getElementById('bWow').onclick=()=>{
-  if(S.wow){ if(S.nr<95){log('Decollo non possibile: Nr inferiore al 95%','a');return;} S.wow=false; log('Decollo – condizione di volo (ELEC PUMP inibita)'); }
-  else { if(S.gear<1){log('Atterraggio non possibile: carrello non giù e bloccato','a');return;} S.wow=true; log('Atterraggio – a terra'); }};
+  if(S.wow){ if(S.nr<95){note('Decollo non possibile: Nr inferiore al 95%','a');return;} S.wow=false; log('Decollo – condizione di volo (ELEC PUMP inibita)'); }
+  else { if(S.gear<1){note('Atterraggio non possibile: carrello non giù e bloccato','a');return;} S.wow=true; log('Atterraggio – a terra'); }};
 const rDem=document.getElementById('rDem'); rDem.oninput=()=>{S.demand=+rDem.value;document.getElementById('vDem').textContent=rDem.value+'%';};
 document.getElementById('bFF').onclick=()=>{if(S.ff>0)return;S.ff=20;log('Controllo full & free dei comandi di volo');};
 document.getElementById('lvslot').onclick=()=>{
-  if(S.gearLever==='DOWN'){ if(S.wow){log('Leva carrello UP: retrazione inibita a terra (WOW)','a');return;} S.gearLever='UP';log('Leva carrello UP'); }
+  if(S.gearLever==='DOWN'){ if(S.wow){note('Leva carrello UP: retrazione inibita a terra (WOW)','a');return;} S.gearLever='UP';log('Leva carrello UP'); }
   else { S.gearLever='DOWN';log('Leva carrello DOWN'); } };
 document.getElementById('egguard').onclick=()=>{S.eguard=!S.eguard;if(!S.eguard&&S.emer){S.emer=false;log('Protezione EMERG DOWN abbassata: selezione di emergenza resettata');}else log('Protezione EMERG DOWN '+(S.eguard?'sollevata':'abbassata'));};
 document.getElementById('egbtn').onclick=()=>{ if(!S.eguard) return;
   if(S.emer){log('EMERG DOWN già selezionato');return;}
-  S.emer=true; log('EMERG DOWN premuto – estensione tramite circuito EMER (sist. 1, UTIL SOV1)','a');
-  if(S.c.u1) log('Pressione EMER insufficiente: estensione di emergenza non disponibile – carrello in caduta libera solo se manca pressione NORM','a'); };
-document.getElementById('bGe').onclick=()=>{ if(!S.ge&&S.eng){log('Banco idraulico collegabile solo a motori spenti','a');return;} S.ge=!S.ge;log(S.ge?'Banco idraulico collegato – shuttle valve in posizione manutenzione':'Banco idraulico scollegato – flow restrictor scarica la pressione residua');};
-document.getElementById('refill').onclick=()=>{if(S.nr>1){log('Rabbocco non consentito con rotore in moto','a');return;}S.L=[100,100];log('Serbatoi PCM rabboccati a FULL','g');};
+  S.emer=true; note('EMERG DOWN premuto – estensione tramite circuito EMER (sist. 1, UTIL SOV1)','a');
+  if(S.c.u1) note('Pressione EMER insufficiente: estensione di emergenza non disponibile – carrello in caduta libera solo se manca pressione NORM','a'); };
+document.getElementById('bGe').onclick=()=>{ if(!S.ge&&S.eng){note('Banco idraulico collegabile solo a motori spenti','a');return;} S.ge=!S.ge;log(S.ge?'Banco idraulico collegato – shuttle valve in posizione manutenzione':'Banco idraulico scollegato – flow restrictor scarica la pressione residua');};
+document.getElementById('refill').onclick=()=>{if(S.nr>1){note('Rabbocco non consentito con rotore in moto','a');return;}S.L=[100,100];log('Serbatoi PCM rabboccati a FULL','g');};
 document.getElementById('maint').addEventListener('click',e=>{const k=e.target.dataset.reset;if(!k)return;S.pop[k]=false;log('Reset indicatore meccanico '+k);});
 
 document.getElementById('pbEP').onclick=()=>{
   if(S.ep.on){S.ep.on=false;log('ELEC PUMP OFF');return;}
-  if(!S.bat){log('ELEC PUMP: nessuna alimentazione DC','a');return;}
-  if(!S.wow){log('ELEC PUMP: selezione inibita in condizione di volo','a');return;}
-  S.ep.on=true;S.ep.t=0;log('ELEC PUMP ON – timer 2 min avviato','g');};
+  if(!S.bat){note('ELEC PUMP: nessuna alimentazione DC – accendi la batteria (Stato aeromobile → Batteria / DC bus)','a');return;}
+  if(!S.wow){note('ELEC PUMP: selezione inibita in condizione di volo','a');return;}
+  if(S.pump.ep.m==='fail'){note('ELEC PUMP selezionata ON ma guasta (avaria iniettata): nessuna pressione','r');}
+  S.ep.on=true;S.ep.t=0;S.epHot=0;log('ELEC PUMP ON – timer 2 min avviato','g');
+  if(S.P[0]>=TH.pOff&&!S.ge) note('ELEC PUMP in funzione, ma la pressione del sist. 1 (pompe meccaniche) è più alta dei 105 bar della pompa elettrica: nessun effetto visibile, la sua valvola di non ritorno resta chiusa.','i');
+  else if(S.ge) note('ELEC PUMP in funzione, ma il sist. 1 è già pressurizzato dal banco a terra: nessun effetto visibile.','i');
+  else if(S.pump.ep.m!=='fail') note('ELEC PUMP ON: sist. 1 pressurizzato a ~105 bar (solo per il controllo full & free). Le cautions restano accese: pressione inferiore a 190 bar.','g'); };
 document.getElementById('guard').onclick=()=>{S.guard=!S.guard; if(!S.guard&&S.sw!==0){S.sw=0;log('Protezione abbassata: selettore SOV riportato al centro');} else log('Protezione selettore SOV '+(S.guard?'sollevata':'abbassata'));};
 document.querySelectorAll('.swbtns button').forEach(b=>b.onclick=()=>{if(!S.guard)return;const p=+b.dataset.p;if(p===S.sw)return;S.sw=p;
   log('Selettore SOV → '+(p===-1?'1 CLOSE':p===1?'2 CLOSE':'NORM'),'i');
-  if(p===-1&&S.c.servo2&&!S.c.fc2&&S.v.tr) log('ATTENZIONE: 2 SERVO presente – chiudere SOV1 sul sistema non affetto causa perdita di controllo del servo','r');
+  if(p===-1&&S.c.servo2&&!S.c.fc2&&S.v.tr) note('ATTENZIONE: 2 SERVO presente – chiudere SOV1 sul sistema non affetto causa perdita di controllo del servo','r');
   if(p===-1&&(!S.v.tr||S.c.fc2)) log('1 CLOSE inefficace: '+(!S.v.tr?'TRSOV chiusa':'bassa pressione F/C sist. 2'),'a');
-  if(p===1&&S.c.fc1) log('2 CLOSE inefficace: bassa pressione F/C sist. 1','a');});
+  if(p===1&&S.c.fc1) note('2 CLOSE inefficace: bassa pressione F/C sist. 1','a');});
 const ackCat=cat=>{let n=0;for(const m of prevCas) if((CASCAT[m]||'c')===cat&&casAck[m]===false){casAck[m]=true;n++;} if(n)log(`MASTER ${cat==='w'?'WARNING':'CAUTION'} premuto: ${n} messaggi confermati`);};
 document.getElementById('mc').onclick=()=>ackCat('c');
 document.getElementById('mw').onclick=()=>ackCat('w');
